@@ -11,9 +11,10 @@ multiple times before the job reaches a terminal status.
 from __future__ import annotations
 
 import time
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -116,3 +117,53 @@ def get_latest_job_id(slug: str, job_type: str) -> str | None:
     if not files:
         return None
     return f"{slug}/{job_type}/{files[-1].stem}"
+
+
+# --- Sequential orchestration ---
+
+
+@dataclass
+class JobTask:
+    """A job function bound to its arguments, ready to be called.
+
+    job_id must match the ID that was passed to the job function so that
+    run_sequential can mark downstream jobs as skipped on failure.
+
+    Use with run_sequential to chain multiple jobs in order:
+
+        tasks = [
+            JobTask(job_id=id1, fn=run_generators_job, args=(problem_dir, req, id1)),
+            JobTask(job_id=id2, fn=run_validators_job, args=(problem_dir, req, id2)),
+        ]
+        bg.add_task(run_sequential, tasks)
+    """
+
+    job_id: str
+    fn: Callable[..., None]
+    args: tuple[Any, ...] = ()
+    kwargs: dict[str, Any] = field(default_factory=dict)
+
+    def __call__(self) -> None:
+        self.fn(*self.args, **self.kwargs)
+
+
+def run_sequential(tasks: list[JobTask]) -> None:
+    """Run a list of JobTasks one after another in the calling thread.
+
+    Designed to be registered as a single FastAPI BackgroundTask so that
+    multi-step orchestrations (e.g. generate → validate → run) return all
+    their job IDs upfront while still executing in the correct order.
+
+    If a task raises, all remaining jobs are immediately marked 'failed'
+    (with an explanatory error message) and execution stops.  Individual
+    job functions are responsible for marking themselves failed before
+    re-raising, so this only needs to handle the downstream jobs.
+    """
+    remaining = iter(tasks)
+    for task in remaining:
+        try:
+            task()
+        except Exception:
+            for skipped in remaining:
+                update_job(skipped.job_id, status="failed", error="Skipped: earlier job in sequence failed")
+            return
