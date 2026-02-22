@@ -4,7 +4,29 @@ from pathlib import Path
 
 import yaml
 
-from api.models.problem import TestCase, TestSet, TestSetConfig
+from api.collection.frontmatter import parse_frontmatter
+from api.models.problem import TestCase, TestSet, TestSetConfig, TestGenerator
+
+
+def get_test_generators(problem_path: Path) -> list[TestGenerator]:
+    """Discover all test generators under ``<problem>/data/``.
+
+    For now, this is just all .py files.
+    """
+    data_dir = problem_path / "data"
+    if not data_dir.exists():
+        return []
+
+    generators = []
+    for generator in sorted(data_dir.glob("**/*.py")):
+        test_set = generator.relative_to(data_dir).parts[0]
+        generators.append(
+            TestGenerator(
+                name=generator.relative_to(data_dir / test_set),
+                test_set=test_set,
+                **parse_frontmatter(generator),
+            )
+        )
 
 
 def get_test_sets(problem_path: Path) -> list[TestSet]:

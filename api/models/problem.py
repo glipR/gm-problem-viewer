@@ -73,6 +73,12 @@ class Problem(BaseModel):
     validators: list[Validator]
 
 
+class TestGenerator(BaseModel):
+    name: str  # Name of file
+    test_set: str  # Set folder
+    description: str  # Sourced from docstring
+
+
 # --- Request / Response models for API operations ---
 
 
