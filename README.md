@@ -10,8 +10,9 @@ The basic operations it aims to support include:
 
 ## Development
 
-Run server:
+Run server (defaults to port 8001, override with `PORT` env var):
 
 ```
-uv run uvicorn api.main:app --reload
+uv run python -m api
+PORT=9000 uv run python -m api
 ```

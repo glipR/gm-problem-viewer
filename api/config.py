@@ -18,6 +18,10 @@ class Settings:
         os.environ.get("CACHE_ROOT", _PROJECT_ROOT / ".cache")
     )
 
+    # Port the uvicorn server listens on.
+    # Override via PORT env var.
+    port: int = int(os.environ.get("PORT", 8001))
+
 
 @lru_cache
 def get_settings() -> Settings:
