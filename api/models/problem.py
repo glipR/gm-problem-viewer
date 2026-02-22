@@ -19,6 +19,11 @@ class ExportTarget(BaseModel):
     dmoj_config: dict[str, Any] = {}
 
 
+class ProblemLimits(BaseModel):
+    time: float = 1  # Time in seconds
+    memory: int = 262144  # Mem limit in bytes (default 256Mb)
+
+
 class ProblemConfig(BaseModel):
     name: str
     type: str  # "standard" | "interactive"
@@ -27,6 +32,7 @@ class ProblemConfig(BaseModel):
     export_config: dict[str, ExportTarget] = {}
     state: str  # "draft" | "in-progress" | "review" | "archive"
     contests: list[str] | None = None
+    limits: ProblemLimits
 
 
 class TestCase(BaseModel):

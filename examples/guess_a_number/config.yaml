@@ -13,3 +13,6 @@ export_config:
 state: review
 contests: 
 - my-contest
+limits:
+  time: 1
+  memory: 262144
