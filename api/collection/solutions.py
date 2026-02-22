@@ -38,3 +38,18 @@ def get_solutions(problem_path: Path) -> list[Solution]:
         )
 
     return solutions
+
+
+def get_candidate_solution(problem_path: Path) -> Solution:
+    sols = get_solutions(problem_path)
+    candidates = []
+    for sol in sols:
+        # No list filtering, just pure AC.
+        if sol.expectation == "AC":
+            candidates.append(sol)
+    if not candidates:
+        raise ValueError("No candidate solution!")
+    # Prefer cpp over python
+    lang_pref = {"cpp": 1, "python": 2}
+    candidates.sort(key=lambda x: lang_pref.get(x.language, 3))
+    return candidates[0]
