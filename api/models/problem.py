@@ -157,13 +157,16 @@ class ExportResponse(BaseModel):
 
 
 class JobResponse(BaseModel):
-    job_id: str
+    # Ordered list of job IDs to poll.  Single-step endpoints return one entry;
+    # orchestrations (e.g. run_problem) return multiple in execution order.
+    job_ids: list[str]
 
 
 class JobStatusResponse(BaseModel):
     id: str
     status: str  # "pending" | "running" | "done" | "failed"
     result: Any | None = None
+    error: str | None = None
 
 
 # --- Problem state update ---
