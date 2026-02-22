@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from api.collection.frontmatter import parse_frontmatter
+from api.utils.frontmatter import parse_frontmatter
 from api.models.problem import OutputValidator, Validator, ValidatorSet
 
 

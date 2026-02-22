@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from api.collection.frontmatter import parse_frontmatter
+from api.utils.frontmatter import parse_frontmatter
 from api.models.problem import TestCase, TestSet, TestSetConfig, TestGenerator
 
 

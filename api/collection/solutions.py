@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from api.collection.frontmatter import infer_language, parse_frontmatter
+from api.utils.frontmatter import infer_language, parse_frontmatter
 from api.models.problem import Solution
 
 _SOLUTION_EXTENSIONS = {".py", ".cpp", ".cc", ".cxx"}
