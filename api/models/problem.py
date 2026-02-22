@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 from pydantic import BaseModel
+from pathlib import Path
 
 
 class TestSetConfig(BaseModel):
@@ -31,6 +32,9 @@ class TestCase(BaseModel):
     set_name: str
     description: str | None = None
 
+    def full_path(self, problem_dir: Path):
+        return problem_dir / "data" / self.set_name / f"{self.name}.in"
+
 
 class Solution(BaseModel):
     path: str  # relative path within solutions/
@@ -45,6 +49,9 @@ class Validator(BaseModel):
     name: str
     checks: list[str] | None = None  # None = applies to all sets
     description: str | None = None
+
+    def full_path(self, problem_path: Path):
+        return problem_path / "validators" / self.path
 
 
 class OutputValidator(BaseModel):
