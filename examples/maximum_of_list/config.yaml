@@ -8,3 +8,4 @@ export_config:
     type: problemtools
     location: ~/Desktop/problemtools
     problemtools_config: {}
+state: in-progress

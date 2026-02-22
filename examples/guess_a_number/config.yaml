@@ -10,3 +10,6 @@ export_config:
     location: ~/Desktop/mcpc-problems/problems
     dmoj_config:
       include_archive: false
+state: review
+contests: 
+- my-contest

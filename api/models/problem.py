@@ -25,6 +25,8 @@ class ProblemConfig(BaseModel):
     tags: list[str] = []
     difficulty: int | None = None
     export_config: dict[str, ExportTarget] = {}
+    state: str  # "draft" | "in-progress" | "review" | "archive"
+    contests: list[str] | None = None
 
 
 class TestCase(BaseModel):
