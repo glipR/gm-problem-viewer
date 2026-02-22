@@ -81,6 +81,15 @@ class TestSet(BaseModel):
     test_cases: list[TestCase] = []
 
 
+class TestSetDetail(BaseModel):
+    """TestSet augmented with generators, returned by GET /problems/{slug}/tests/."""
+
+    name: str
+    config: TestSetConfig | None = None
+    test_cases: list[TestCase] = []
+    generators: list[TestGenerator] = []
+
+
 class Problem(BaseModel):
     slug: str
     config: ProblemConfig
@@ -92,7 +101,7 @@ class Problem(BaseModel):
 class TestGenerator(BaseModel):
     name: str  # Name of file
     test_set: str  # Set folder
-    description: str  # Sourced from docstring
+    description: str = ""  # Sourced from docstring; empty if none present
 
 
 # --- Request / Response models for API operations ---

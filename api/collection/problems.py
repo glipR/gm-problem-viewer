@@ -8,7 +8,6 @@ from api.collection.solutions import get_solutions
 from api.collection.test_sets import get_test_sets
 from api.collection.validators import get_validators
 from api.models.problem import Problem, ProblemConfig
-from api.routes import problems
 
 
 def list_problems(problems_dir: Path) -> list[Problem]:

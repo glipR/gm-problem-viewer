@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
+from api.collection.test_sets import get_test_sets, get_test_generators
+from api.config import get_settings
 from api.models.problem import (
     CreateTestCaseRequest,
     CreateTestCaseResponse,
@@ -15,11 +17,34 @@ from api.models.problem import (
     GenerateTestsRequest,
     JobResponse,
     TestContentResponse,
+    TestSetDetail,
     UpdateTestCaseRequest,
     UpdateTestSetRequest,
 )
 
 router = APIRouter(prefix="/problems/{slug}/tests", tags=["tests"])
+
+
+@router.get("/", response_model=list[TestSetDetail])
+def list_test_sets(slug: str):
+    """Return all test sets for a problem, including test cases and generators."""
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+
+    sets = get_test_sets(problem_path)
+    all_generators = get_test_generators(problem_path) or []
+
+    return [
+        TestSetDetail(
+            name=ts.name,
+            config=ts.config,
+            test_cases=ts.test_cases,
+            generators=[g for g in all_generators if g.test_set == ts.name],
+        )
+        for ts in sets
+    ]
 
 
 @router.post("/generate", response_model=JobResponse)

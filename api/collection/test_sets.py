@@ -22,11 +22,12 @@ def get_test_generators(problem_path: Path) -> list[TestGenerator]:
         test_set = generator.relative_to(data_dir).parts[0]
         generators.append(
             TestGenerator(
-                name=generator.relative_to(data_dir / test_set),
+                name=str(generator.relative_to(data_dir / test_set)),
                 test_set=test_set,
                 **parse_frontmatter(generator),
             )
         )
+    return generators
 
 
 def get_test_sets(problem_path: Path) -> list[TestSet]:
