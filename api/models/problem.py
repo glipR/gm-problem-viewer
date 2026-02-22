@@ -151,3 +151,78 @@ class ExportResponse(BaseModel):
     target: str
     location: str
     exported_files: list[str]
+
+
+# --- Async job system ---
+
+
+class JobResponse(BaseModel):
+    job_id: str
+
+
+class JobStatusResponse(BaseModel):
+    id: str
+    status: str  # "pending" | "running" | "done" | "failed"
+    result: Any | None = None
+
+
+# --- Problem state update ---
+
+
+class PatchProblemRequest(BaseModel):
+    state: str  # "draft" | "in-progress" | "review" | "archive"
+
+
+# --- Statement ---
+
+
+class StatementResponse(BaseModel):
+    raw: str
+
+
+# --- Review ---
+
+
+class CheckResult(BaseModel):
+    name: str
+    passed: bool
+    detail: str = ""
+
+
+class ReviewResponse(BaseModel):
+    checks: list[CheckResult]
+
+
+# --- Test set / test case creation and editing ---
+
+
+class CreateTestSetRequest(BaseModel):
+    name: str
+    description: str | None = None
+    points: float = 0.0
+    marking_style: str = "all_or_nothing"  # "progressive" | "all_or_nothing"
+
+
+class CreateTestCaseRequest(BaseModel):
+    content: str
+    name: str | None = None  # auto-assigned if absent
+    description: str | None = None
+
+
+class CreateTestCaseResponse(BaseModel):
+    name: str
+
+
+class UpdateTestCaseRequest(BaseModel):
+    description: str
+
+
+class UpdateTestSetRequest(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    points: float | None = None
+    marking_style: str | None = None
+
+
+class TestContentResponse(BaseModel):
+    content: str

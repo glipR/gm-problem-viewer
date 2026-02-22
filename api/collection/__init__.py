@@ -10,7 +10,6 @@ parse_frontmatter(path)  -> dict   (YAML frontmatter from .py / .cpp)
 infer_language(path)     -> str | None
 """
 
-from api.collection.frontmatter import *
 from api.collection.problems import *
 from api.collection.solutions import *
 from api.collection.statement import *

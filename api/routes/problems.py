@@ -4,7 +4,7 @@ Problems router — listing and detail views for problems on disk.
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from api.collection import (
     list_problems as col_list_problems,
@@ -12,6 +12,7 @@ from api.collection import (
 )
 from api.config import get_settings
 from api.models.problem import (
+    PatchProblemRequest,
     Problem,
 )
 
@@ -34,3 +35,9 @@ def get_problem(slug: str):
     settings = get_settings()
     problem = col_get_problem(settings.problems_root, slug)
     return problem
+
+
+@router.patch("/{slug}", response_model=Problem)
+def update_problem(slug: str, req: PatchProblemRequest):
+    """Update mutable problem fields (currently: state). Persists to config.yaml."""
+    raise HTTPException(status_code=501, detail="Not implemented")
