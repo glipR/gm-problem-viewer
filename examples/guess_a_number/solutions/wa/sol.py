@@ -1,5 +1,5 @@
 """---
-name:  WA Try everything
+name:  WA Try random
 expectation:
 - setA: WA
 - setB: WA

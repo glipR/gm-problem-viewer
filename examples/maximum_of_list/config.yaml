@@ -1,15 +1,15 @@
-name: Maximum of a List
-type: standard
-tags:
-  - implementation
+author: Jackson Goerner
 difficulty: 800
 export_config:
   mcpc-problems:
-    type: problemtools
     location: ~/Desktop/problemtools
     problemtools_config: {}
-state: in-progress
+    type: problemtools
 limits:
-  time: 1
   memory: 262144
-author: Jackson Goerner
+  time: 1
+name: Maximum of a List
+state: in-progress
+tags:
+- implementation
+type: standard
