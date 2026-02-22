@@ -6,9 +6,10 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
-from api.collection import (
+from api.collection.problems import (
     list_problems as col_list_problems,
     get_problem as col_get_problem,
+    patch_problem_config as col_patch_problem_config,
 )
 from api.config import get_settings
 from api.models.problem import (
@@ -40,4 +41,7 @@ def get_problem(slug: str):
 @router.patch("/{slug}", response_model=Problem)
 def update_problem(slug: str, req: PatchProblemRequest):
     """Update mutable problem fields (currently: state). Persists to config.yaml."""
-    raise HTTPException(status_code=501, detail="Not implemented")
+    settings = get_settings()
+    col_patch_problem_config(settings.problems_root, slug, **req.model_dump())
+    problem = col_get_problem(settings.problems_root, slug)
+    return problem

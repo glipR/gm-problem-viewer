@@ -8,6 +8,7 @@ from api.collection.solutions import get_solutions
 from api.collection.test_sets import get_test_sets
 from api.collection.validators import get_validators
 from api.models.problem import Problem, ProblemConfig
+from api.routes import problems
 
 
 def list_problems(problems_dir: Path) -> list[Problem]:
@@ -35,7 +36,13 @@ def list_problems(problems_dir: Path) -> list[Problem]:
         except Exception:
             continue
         problems.append(
-            Problem(slug=entry.name, config=config, test_sets=[], solutions=[], validators=[])
+            Problem(
+                slug=entry.name,
+                config=config,
+                test_sets=[],
+                solutions=[],
+                validators=[],
+            )
         )
 
     return problems
@@ -74,4 +81,20 @@ def get_problem(problems_dir: Path, problem_slug: str) -> Problem:
         test_sets=[ts.name for ts in test_sets],
         solutions=solutions,
         validators=validator_set.input,
+    )
+
+
+def patch_problem_config(problems_dir: Path, problem_slug: str, **kwargs):
+    problem_path = problems_dir / problem_slug
+    config_path = problem_path / "config.yaml"
+
+    if not config_path.exists():
+        raise FileNotFoundError(
+            f"Problem '{problem_slug}' not found (no config.yaml at {config_path})"
+        )
+
+    data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    data.update(kwargs)
+    config_path.write_text(
+        yaml.dump(data, default_flow_style=False, allow_unicode=True)
     )
