@@ -7,9 +7,10 @@ import FacetIcons from './FacetIcons'
 
 interface Props {
   problem: Problem
+  onSelect?: (slug: string) => void
 }
 
-export default function ProblemCard({ problem }: Props) {
+export default function ProblemCard({ problem, onSelect }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: problem.slug,
   })
@@ -30,6 +31,7 @@ export default function ProblemCard({ problem }: Props) {
       padding="sm"
       radius="md"
       shadow="xs"
+      onClick={() => onSelect?.(problem.slug)}
     >
       <Stack gap={6}>
         {/* Top row: slug + tags + difficulty */}

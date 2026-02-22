@@ -7,9 +7,10 @@ interface Props {
   id: string
   label: string
   problems: Problem[]
+  onProblemClick: (slug: string) => void
 }
 
-export default function KanbanLane({ id, label, problems }: Props) {
+export default function KanbanLane({ id, label, problems, onProblemClick }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id })
 
   return (
@@ -33,7 +34,7 @@ export default function KanbanLane({ id, label, problems }: Props) {
           </Text>
         </Text>
         {problems.map((p) => (
-          <ProblemCard key={p.slug} problem={p} />
+          <ProblemCard key={p.slug} problem={p} onSelect={onProblemClick} />
         ))}
       </Stack>
     </Paper>

@@ -1,15 +1,23 @@
 import { Box, Center, Loader, Text, Title } from '@mantine/core'
-import { DndContext } from '@dnd-kit/core'
+import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { useProblems, usePatchProblemState } from '../hooks/useProblems'
 import { useProblemsStore } from '../store/problemsStore'
 import KanbanBoard from '../components/kanban/KanbanBoard'
 import type { Problem } from '../types/problem'
 
-export default function KanbanPage() {
+interface Props {
+  onProblemClick: (slug: string) => void
+}
+
+export default function KanbanPage({ onProblemClick }: Props) {
   const { data: problems, isLoading, isError } = useProblems()
   const { mutate: patchState } = usePatchProblemState()
   const { overrides, setOverride, clearOverride } = useProblemsStore()
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  )
 
   function handleDragEnd(event: DragEndEvent) {
     const slug = event.active.id as string
@@ -51,8 +59,8 @@ export default function KanbanPage() {
       <Title order={2} mb="lg">
         Problems
       </Title>
-      <DndContext onDragEnd={handleDragEnd}>
-        <KanbanBoard problems={displayProblems} />
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <KanbanBoard problems={displayProblems} onProblemClick={onProblemClick} />
       </DndContext>
     </Box>
   )

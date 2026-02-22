@@ -10,9 +10,10 @@ const LANES: { id: ProblemState; label: string }[] = [
 
 interface Props {
   problems: Problem[]
+  onProblemClick: (slug: string) => void
 }
 
-export default function KanbanBoard({ problems }: Props) {
+export default function KanbanBoard({ problems, onProblemClick }: Props) {
   return (
     <SimpleGrid cols={3} spacing="md">
       {LANES.map((lane) => (
@@ -21,6 +22,7 @@ export default function KanbanBoard({ problems }: Props) {
           id={lane.id}
           label={lane.label}
           problems={problems.filter((p) => p.config.state === lane.id)}
+          onProblemClick={onProblemClick}
         />
       ))}
     </SimpleGrid>
