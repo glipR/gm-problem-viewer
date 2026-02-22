@@ -1,0 +1,10 @@
+name: Maximum of a List
+type: standard
+tags:
+  - implementation
+difficulty: 800
+export_config:
+  mcpc-problems:
+    type: problemtools
+    location: ~/Desktop/problemtools
+    problemtools_config: {}

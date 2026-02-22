@@ -1,0 +1,27 @@
+"""---
+name:  Complete AC
+expectation: AC
+---
+
+Solution for entire problem
+
+Approach - standard binary search
+"""
+
+l = 1
+r = 100001
+
+while True:
+    mid = (l+r)//2
+    print(mid)
+    ans = input()
+    if ans == "YES":
+        break
+    elif ans == "HIGHER":
+        l = mid+1
+    elif ans == "LOWER":
+        r = mid
+    elif ans == "DONE":
+        break
+    else:
+        raise ValueError("???")

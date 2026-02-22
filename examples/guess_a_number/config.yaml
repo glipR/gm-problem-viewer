@@ -1,0 +1,12 @@
+name: Guess a Number
+type: interactive
+tags:
+  - binary search
+  - subparts
+difficulty: 1200
+export_config:
+  mcpc-problems:
+    type: dmoj
+    location: ~/Desktop/mcpc-problems/problems
+    dmoj_config:
+      include_archive: false
