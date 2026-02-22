@@ -40,7 +40,7 @@ def list_problems(problems_dir: Path) -> list[Problem]:
                 config=config,
                 test_sets=[],
                 solutions=[],
-                validators=[],
+                validators={"input": [], "output": None},
             )
         )
 
@@ -79,7 +79,7 @@ def get_problem(problems_dir: Path, problem_slug: str) -> Problem:
         config=config,
         test_sets=[ts.name for ts in test_sets],
         solutions=solutions,
-        validators=validator_set.input,
+        validators=validator_set,
     )
 
 

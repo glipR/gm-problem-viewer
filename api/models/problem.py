@@ -52,6 +52,9 @@ class Solution(BaseModel):
     expectation: str | list[dict[str, str]]  # "AC" | "WA" | "TLE" or per-set list
     description: str | None = None
 
+    def full_path(self, problem_path: Path):
+        return problem_path / "solutions" / self.path
+
 
 class Validator(BaseModel):
     path: str  # relative path within validators/
@@ -68,6 +71,9 @@ class OutputValidator(BaseModel):
     type: str  # "checker" | "judge"
     name: str | None = None
     description: str | None = None
+
+    def full_path(self, problem_path: Path):
+        return problem_path / "validators" / self.path
 
 
 class ValidatorSet(BaseModel):
@@ -95,7 +101,7 @@ class Problem(BaseModel):
     config: ProblemConfig
     test_sets: list[str]
     solutions: list[Solution]
-    validators: list[Validator]
+    validators: ValidatorSet
 
 
 class TestGenerator(BaseModel):
@@ -108,7 +114,7 @@ class TestGenerator(BaseModel):
 
 
 class RunSolutionRequest(BaseModel):
-    solution_path: str  # relative path, e.g. "complete_ac/sol.py"
+    solution_paths: list[str]  # relative path, e.g. "complete_ac/sol.py"
     test_set: str | None = None  # None = run all sets
 
 
@@ -124,6 +130,10 @@ class RunSolutionResponse(BaseModel):
     solution_path: str
     verdicts: list[Verdict]
     overall: str  # aggregate verdict
+
+
+class RunSolutionsResponse(BaseModel):
+    solutions: list[RunSolutionResponse]
 
 
 class RunValidatorsRequest(BaseModel):

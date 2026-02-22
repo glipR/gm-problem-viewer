@@ -14,7 +14,7 @@ interface Props {
 export default function FacetIcons({ problem }: Props) {
   const hasStatement = true // always assumed present
   const hasSolutions = problem.solutions.length > 0
-  const hasValidators = problem.validators.length > 0
+  const hasValidators = problem.validators.input.length > 0
   const hasTests = problem.test_sets.length > 0
 
   const color = (present: boolean) => (present ? 'teal' : 'gray')

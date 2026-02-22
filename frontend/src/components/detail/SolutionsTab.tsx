@@ -55,7 +55,7 @@ function groupByFolder(solutions: Solution[]): [string, Solution[]][] {
 
 function SolutionItem({ solution, slug }: { solution: Solution; slug: string }) {
   const { mutate: run, isPending } = useMutation({
-    mutationFn: () => runSolutions(slug, solution.path),
+    mutationFn: () => runSolutions(slug, { solution_paths: [solution.path] }),
     onSuccess: () =>
       notifications.show({ message: `Running ${solution.name}…`, color: 'blue' }),
     onError: () =>
@@ -117,7 +117,10 @@ function SolutionItem({ solution, slug }: { solution: Solution; slug: string }) 
 
 export default function SolutionsTab({ problem }: Props) {
   const { mutate: runAll, isPending } = useMutation({
-    mutationFn: () => runSolutions(problem.slug),
+    mutationFn: () =>
+      runSolutions(problem.slug, {
+        solution_paths: problem.solutions.map((s) => s.path),
+      }),
     onSuccess: () =>
       notifications.show({ message: 'Running all solutions…', color: 'blue' }),
     onError: () =>

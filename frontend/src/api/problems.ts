@@ -94,13 +94,19 @@ export async function reviewProblemAI(slug: string): Promise<{ job_ids: string[]
   return data
 }
 
+/** Request body for POST /problems/{slug}/solutions/run — matches RunSolutionRequest in API */
+export interface RunSolutionRequest {
+  solution_paths: string[]
+  test_set?: string | null
+}
+
 export async function runSolutions(
   slug: string,
-  solutionPath?: string,
+  req: RunSolutionRequest,
 ): Promise<{ job_ids: string[] }> {
   const { data } = await client.post<{ job_ids: string[] }>(
     `/problems/${slug}/solutions/run`,
-    { solution_path: solutionPath ?? '' },
+    req,
   )
   return data
 }

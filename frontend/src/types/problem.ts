@@ -28,12 +28,22 @@ export interface Validator {
   description?: string
 }
 
+export interface OutputValidator {
+  path: string
+  type: string
+  name?: string
+  description?: string
+}
+
 export interface Problem {
   slug: string
   config: ProblemConfig
   test_sets: string[]
   solutions: Solution[]
-  validators: Validator[]
+  validators: {
+    input: Validator[],
+    output: OutputValidator,
+  }
 }
 
 export type ProblemState = 'draft' | 'in-progress' | 'review' | 'archive'
