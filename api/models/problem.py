@@ -33,6 +33,7 @@ class ProblemConfig(BaseModel):
     state: str  # "draft" | "in-progress" | "review" | "archive"
     contests: list[str] | None = None
     limits: ProblemLimits
+    author: str
 
 
 class TestCase(BaseModel):
