@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.routes import problems, solutions, validators, tests, export
 
 app = FastAPI(
     title="GM Problem Viewer",
@@ -16,6 +17,11 @@ app.add_middleware(
 )
 
 # Routers
+app.include_router(problems.router)
+app.include_router(solutions.router)
+app.include_router(validators.router)
+app.include_router(tests.router)
+app.include_router(export.router)
 
 
 @app.get("/health", tags=["health"])
