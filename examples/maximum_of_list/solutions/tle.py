@@ -7,7 +7,7 @@ expectation: TLE
 import random
 
 n = int(input())
-a = list(map(int, input()))
+a = list(map(int, input().split()))
 i = 0
 for v1 in a:
     for v2 in a:
