@@ -84,9 +84,9 @@ def _get_test_cases(set_dir: Path) -> list[TestCase]:
     return cases
 
 
-def _load_case_info(in_file: Path) -> str | None:
+def _load_case_info(in_file: Path):
     sidecar = in_file.with_suffix(".yaml")
     if not sidecar.exists():
-        return None
+        return {}
     data = yaml.safe_load(sidecar.read_text(encoding="utf-8"))
     return data or {}
