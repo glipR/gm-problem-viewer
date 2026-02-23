@@ -23,7 +23,7 @@ def run_python_file(
             text = f.read()
         kwargs["input"] = text
     result = subprocess.run(
-        ["python", str(file_path.resolve())],
+        ["pypy3", str(file_path.resolve())],
         text=True,
         capture_output=True,
         timeout=timeout_sec,

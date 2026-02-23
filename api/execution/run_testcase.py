@@ -159,3 +159,13 @@ def run_individual_testcase(
             time_ms=0,  # TODO
             comment=result.error,
         )
+    else:
+        # Just do diff
+        same = result.stdout.strip() == judge_result.stdout.strip()
+        return Verdict(
+            test_case=test_case.name,
+            test_set=test_case.set_name,
+            verdict="AC" if same else "WA",
+            time_ms=0,  # TODO
+            comment="",
+        )
