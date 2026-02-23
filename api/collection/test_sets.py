@@ -6,7 +6,13 @@ from pathlib import Path
 import yaml
 
 from api.utils.frontmatter import parse_frontmatter
-from api.models.problem import TestCase, TestSet, TestSetConfig, TestGenerator
+from api.models.problem import (
+    TestCase,
+    TestContentResponse,
+    TestSet,
+    TestSetConfig,
+    TestGenerator,
+)
 
 
 def _natural_key(p: Path) -> list[int | str]:
@@ -60,6 +66,23 @@ def get_test_sets(problem_path: Path) -> list[TestSet]:
         )
 
     return test_sets
+
+
+def get_test_content(
+    problem_path: Path, set_name: str, test_name: str
+) -> TestContentResponse:
+    """
+    Retrieves up to the first 1KB of data from the file
+    """
+    file_path = TestCase(name=test_name, set_name=set_name).full_path(problem_path)
+    content = ""
+    if file_path.exists():
+        with open(file_path, "rb") as f:
+            raw = f.read(1024)  # Limit 1KB
+        content = raw.decode("utf-8", errors="replace")
+        if len(raw) == 1024:
+            content += "..."
+    return TestContentResponse(content=content)
 
 
 # ---------------------------------------------------------------------------

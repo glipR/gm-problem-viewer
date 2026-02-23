@@ -8,7 +8,11 @@ from __future__ import annotations
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
-from api.collection.test_sets import get_test_sets, get_test_generators
+from api.collection.test_sets import (
+    get_test_content,
+    get_test_sets,
+    get_test_generators,
+)
 from api.config import get_settings
 from api.execution.run_testgen import run_testgen_job
 from api.jobs import JobType, create_job
@@ -86,13 +90,17 @@ def create_test_case(slug: str, set_name: str, req: CreateTestCaseRequest):
     raise HTTPException(status_code=501, detail="Not implemented")
 
 
-@router.get("/{set_name}/{test_name}", response_model=TestContentResponse)
+@router.get("/{set_name}/{test_name:path}", response_model=TestContentResponse)
 def get_test_case(slug: str, set_name: str, test_name: str):
     """Return the raw contents of a .in file."""
-    raise HTTPException(status_code=501, detail="Not implemented")
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+    return get_test_content(problem_path, set_name, test_name)
 
 
-@router.patch("/{set_name}/{test_name}", response_model=None)
+@router.patch("/{set_name}/{test_name:path}", response_model=None)
 def update_test_case(
     slug: str, set_name: str, test_name: str, req: UpdateTestCaseRequest
 ):
