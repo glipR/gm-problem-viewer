@@ -23,6 +23,7 @@ from api.config import get_settings
 
 # --- Canonical job types ---
 
+
 class JobType:
     GENERATE_TESTS = "generate_tests"
     RUN_VALIDATORS = "run_validators"
@@ -31,6 +32,7 @@ class JobType:
 
 
 # --- Internal helpers ---
+
 
 def _cache_root() -> Path:
     return get_settings().cache_root
@@ -45,6 +47,7 @@ def _now_iso() -> str:
 
 
 # --- Public API ---
+
 
 def make_job_id(slug: str, job_type: str) -> str:
     """Build a unique job ID from slug, type, and current time in ms."""
@@ -123,6 +126,7 @@ def get_latest_job_id(slug: str, job_type: str) -> str | None:
 # Individual solution run jobs (stored one level deeper than group runs)
 # ---------------------------------------------------------------------------
 
+
 def _solution_key(solution_path: str) -> str:
     """Encode a solution path as a single directory name (/ → __)."""
     return solution_path.replace("/", "__")
@@ -188,8 +192,8 @@ class JobTask:
     Use with run_sequential to chain multiple jobs in order:
 
         tasks = [
-            JobTask(job_id=id1, fn=run_generators_job, args=(problem_dir, req, id1)),
-            JobTask(job_id=id2, fn=run_validators_job, args=(problem_dir, req, id2)),
+            JobTask(job_id=id1, fn=run_generators_job, args=(problem_path, req, id1)),
+            JobTask(job_id=id2, fn=run_validators_job, args=(problem_path, req, id2)),
         ]
         bg.add_task(run_sequential, tasks)
     """
@@ -240,5 +244,9 @@ def run_sequential(tasks: list[JobTask]) -> None:
             task()
         except Exception:
             for skipped in remaining:
-                update_job(skipped.job_id, status="failed", error="Skipped: earlier job in sequence failed")
+                update_job(
+                    skipped.job_id,
+                    status="failed",
+                    error="Skipped: earlier job in sequence failed",
+                )
             return

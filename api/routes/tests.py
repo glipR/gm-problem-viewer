@@ -60,12 +60,12 @@ def generate_tests(slug: str, req: GenerateMultipleTestsRequest, bg: BackgroundT
     `Path(__file__).parent` resolves correctly).
     """
     settings = get_settings()
-    problem_dir = settings.problems_root / slug
-    if not problem_dir.exists():
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
         raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
 
     job_id = create_job(slug, JobType.GENERATE_TESTS)
-    bg.add_task(run_testgen_job, problem_dir, req, job_id)
+    bg.add_task(run_testgen_job, problem_path, req, job_id)
 
     return JobResponse(job_ids=[job_id])
 

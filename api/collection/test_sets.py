@@ -48,7 +48,9 @@ def get_test_sets(problem_path: Path) -> list[TestSet]:
         return []
 
     test_sets: list[TestSet] = []
-    for set_dir in sorted((d for d in data_dir.iterdir() if d.is_dir()), key=_natural_key):
+    for set_dir in sorted(
+        (d for d in data_dir.iterdir() if d.is_dir()), key=_natural_key
+    ):
         test_sets.append(
             TestSet(
                 name=set_dir.name,

@@ -28,7 +28,7 @@ _FLUSH_INTERVAL = 0.5  # seconds between partial result writes
 
 
 def run_solutions_job(
-    problem_dir: Path, problem_slug: str, req: RunSolutionRequest, job_id: str
+    problem_path: Path, problem_slug: str, req: RunSolutionRequest, job_id: str
 ) -> None:
     """
     Background task: runs all applicable validators and streams partial results
@@ -36,14 +36,14 @@ def run_solutions_job(
 
     Intended to be registered with FastAPI BackgroundTasks:
 
-        bg.add_task(run_validators_job, problem_dir, req, job_id)
+        bg.add_task(run_validators_job, problem_path, req, job_id)
     """
     try:
         update_job(job_id, status="running")
 
-        problem = get_problem(problem_dir.parent, problem_slug)
-        solutions = get_solutions(problem_dir)
-        test_sets = get_test_sets(problem_dir)
+        problem = get_problem(problem_path.parent, problem_slug)
+        solutions = get_solutions(problem_path)
+        test_sets = get_test_sets(problem_path)
 
         results = RunSolutionsResponse(solutions=[])
         last_flush = time.monotonic()
@@ -61,7 +61,7 @@ def run_solutions_job(
                     if (not req.test_set) or req.test_set == test_set:
                         for test_case in test_set.test_cases:
                             verdict = run_individual_testcase(
-                                problem_dir, problem, solution, test_case
+                                problem_path, problem, solution, test_case
                             )
                             results.solutions[-1].verdicts.append(verdict)
 
@@ -101,12 +101,12 @@ def run_solutions_job(
 
 
 def output_individual_testcase(
-    problem_dir: Path, problem: Problem, solution: Solution, test_case: TestCase
+    problem_path: Path, problem: Problem, solution: Solution, test_case: TestCase
 ):
     if solution.language == "python":
         result = run_python_file(
-            solution.full_path(problem_dir),
-            test_case.full_path(problem_dir),
+            solution.full_path(problem_path),
+            test_case.full_path(problem_path),
             problem.config.limits.time,
         )
         return result
@@ -115,13 +115,13 @@ def output_individual_testcase(
 
 
 def run_individual_testcase(
-    problem_dir: Path, problem: Problem, solution: Solution, test_case: TestCase
+    problem_path: Path, problem: Problem, solution: Solution, test_case: TestCase
 ):
     if problem.config.type == "interactive":
         raise NotImplementedError
     # Get solution output
     try:
-        result = output_individual_testcase(problem_dir, problem, solution, test_case)
+        result = output_individual_testcase(problem_path, problem, solution, test_case)
     except TimeoutExpired:
         return Verdict(
             test_case=test_case.name,
@@ -139,14 +139,14 @@ def run_individual_testcase(
             comment="Runtime Error",
         )
     # Get result against candidate solution
-    judge_sol = get_candidate_solution(problem_dir)
+    judge_sol = get_candidate_solution(problem_path)
     judge_result = output_individual_testcase(
-        problem_dir, problem, judge_sol, test_case
+        problem_path, problem, judge_sol, test_case
     )
     if problem.validators.output:
         # Output validator, check against the result output.
         result = run_output_validator_standard(
-            problem_dir,
+            problem_path,
             problem.validators.output,
             test_case,
             result.stdout,

@@ -32,9 +32,9 @@ def export_problem(slug: str, req: ExportRequest):
     and dispatches to the appropriate exporter.
     """
     settings = get_settings()
-    problem_dir = settings.problems_root / slug
+    problem_path = settings.problems_root / slug
 
-    if not problem_dir.exists():
+    if not problem_path.exists():
         raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
 
     problem = get_problem(settings.problems_root, slug)
@@ -50,9 +50,9 @@ def export_problem(slug: str, req: ExportRequest):
 
     # TODO: implement export
     # Dispatch based on target_config.type:
-    #   "dmoj"        -> _export_dmoj(problem_dir, slug, config, target_config)
-    #   "problemtools" -> _export_problemtools(problem_dir, slug, config, target_config)
-    #   "direct-copy" -> _export_direct_copy(problem_dir, slug, target_config)
+    #   "dmoj"        -> _export_dmoj(problem_path, slug, config, target_config)
+    #   "problemtools" -> _export_problemtools(problem_path, slug, config, target_config)
+    #   "direct-copy" -> _export_direct_copy(problem_path, slug, target_config)
     raise HTTPException(
         status_code=501,
         detail=f"Export type '{target_config.type}' not yet implemented",

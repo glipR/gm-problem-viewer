@@ -11,7 +11,7 @@ from api.models.problem import (
 
 
 def run_testgen_job(
-    problem_dir: Path, req: GenerateMultipleTestsRequest, job_id: str
+    problem_path: Path, req: GenerateMultipleTestsRequest, job_id: str
 ) -> None:
     """
     Background task: runs all applicable validators and streams partial results
@@ -19,12 +19,12 @@ def run_testgen_job(
 
     Intended to be registered with FastAPI BackgroundTasks:
 
-        bg.add_task(run_validators_job, problem_dir, req, job_id)
+        bg.add_task(run_validators_job, problem_path, req, job_id)
     """
     try:
         update_job(job_id, status="running")
 
-        generators = get_test_generators(problem_dir)
+        generators = get_test_generators(problem_path)
 
         results = []
 
@@ -46,7 +46,7 @@ def run_testgen_job(
                 )
 
                 try:
-                    run_individual_testgen(problem_dir, generator)
+                    run_individual_testgen(problem_path, generator)
                 except Exception as e:
                     import traceback
 
@@ -74,7 +74,7 @@ def run_testgen_job(
         raise
 
 
-def run_individual_testgen(problem_dir: Path, test_generator: TestGenerator):
-    generator_file = test_generator.full_path(problem_dir)
+def run_individual_testgen(problem_path: Path, test_generator: TestGenerator):
+    generator_file = test_generator.full_path(problem_path)
 
     run_python_file(generator_file, None, timeout_sec=None)

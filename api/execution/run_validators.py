@@ -20,7 +20,7 @@ _FLUSH_INTERVAL = 0.5  # seconds between partial result writes
 
 
 def run_validators_job(
-    problem_dir: Path, req: RunValidatorsRequest, job_id: str
+    problem_path: Path, req: RunValidatorsRequest, job_id: str
 ) -> None:
     """
     Background task: runs all applicable validators and streams partial results
@@ -28,13 +28,13 @@ def run_validators_job(
 
     Intended to be registered with FastAPI BackgroundTasks:
 
-        bg.add_task(run_validators_job, problem_dir, req, job_id)
+        bg.add_task(run_validators_job, problem_path, req, job_id)
     """
     try:
         update_job(job_id, status="running")
 
-        validators = get_validators(problem_dir)
-        test_sets = get_test_sets(problem_dir)
+        validators = get_validators(problem_path)
+        test_sets = get_test_sets(problem_path)
 
         results: list[ValidatorResult] = []
         last_flush = time.monotonic()
@@ -46,7 +46,7 @@ def run_validators_job(
                 ):
                     for test_case in test_set.test_cases:
                         results.append(
-                            run_input_validator(problem_dir, validator, test_case)
+                            run_input_validator(problem_path, validator, test_case)
                         )
 
                         now = time.monotonic()
@@ -68,10 +68,10 @@ def run_validators_job(
         raise
 
 
-def run_input_validator(problem_dir: Path, validator: Validator, test_case: TestCase):
+def run_input_validator(problem_path: Path, validator: Validator, test_case: TestCase):
     result = run_python_file(
-        validator.full_path(problem_dir),
-        test_case.full_path(problem_dir),
+        validator.full_path(problem_path),
+        test_case.full_path(problem_path),
     )
     return ValidatorResult(
         validator=validator.path,
@@ -83,14 +83,14 @@ def run_input_validator(problem_dir: Path, validator: Validator, test_case: Test
 
 
 def run_output_validator_standard(
-    problem_dir: Path,
+    problem_path: Path,
     validator: OutputValidator,
     test_case: TestCase,
     process_output: str,
     judge_output: str,
 ) -> ValidatorResult:
-    validator_path = validator.full_path(problem_dir)
-    input_data = test_case.full_path(problem_dir).read_text()
+    validator_path = validator.full_path(problem_path)
+    input_data = test_case.full_path(problem_path).read_text()
 
     def capturing_make_result(code: str, points: float, comment: str) -> None:
         return [code, points, comment]

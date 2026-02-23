@@ -41,8 +41,8 @@ class TestCase(BaseModel):
     set_name: str
     description: str | None = None
 
-    def full_path(self, problem_dir: Path):
-        return problem_dir / "data" / self.set_name / f"{self.name}.in"
+    def full_path(self, problem_path: Path):
+        return problem_path / "data" / self.set_name / f"{self.name}.in"
 
 
 class Solution(BaseModel):
@@ -109,8 +109,8 @@ class TestGenerator(BaseModel):
     test_set: str  # Set folder
     description: str = ""  # Sourced from docstring; empty if none present
 
-    def full_path(self, problem_dir: Path):
-        return problem_dir / "data" / self.test_set / self.name
+    def full_path(self, problem_path: Path):
+        return problem_path / "data" / self.test_set / self.name
 
 
 # --- Request / Response models for API operations ---

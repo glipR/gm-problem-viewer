@@ -45,15 +45,15 @@ def run_solution(slug: str, req: RunSolutionRequest, bg: BackgroundTasks):
     """
 
     settings = get_settings()
-    problem_dir = settings.problems_root / slug
-    if not problem_dir.exists():
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
         raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
 
     if len(req.solution_paths) == 1:
         job_id = create_individual_job(slug, req.solution_paths[0])
     else:
         job_id = create_job(slug, JobType.RUN_SOLUTION)
-    bg.add_task(run_solutions_job, problem_dir, slug, req, job_id)
+    bg.add_task(run_solutions_job, problem_path, slug, req, job_id)
 
     return JobResponse(job_ids=[job_id])
 

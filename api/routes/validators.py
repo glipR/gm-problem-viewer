@@ -28,11 +28,11 @@ def run_validators(slug: str, req: RunValidatorsRequest, bg: BackgroundTasks):
     passes if it exits without raising an AssertionError.
     """
     settings = get_settings()
-    problem_dir = settings.problems_root / slug
-    if not problem_dir.exists():
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
         raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
 
     job_id = create_job(slug, JobType.RUN_VALIDATORS)
-    bg.add_task(run_validators_job, problem_dir, req, job_id)
+    bg.add_task(run_validators_job, problem_path, req, job_id)
 
     return JobResponse(job_ids=[job_id])
