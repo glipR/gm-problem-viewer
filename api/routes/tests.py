@@ -5,7 +5,10 @@ TODO: Implement all endpoints below.
 """
 
 from __future__ import annotations
+import re
+import os
 
+import yaml
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from api.collection.test_sets import (
@@ -23,7 +26,9 @@ from api.models.problem import (
     GenerateMultipleTestsRequest,
     GenerateTestsRequest,
     JobResponse,
+    TestCase,
     TestContentResponse,
+    TestSetConfig,
     TestSetDetail,
     UpdateTestCaseRequest,
     UpdateTestSetRequest,
@@ -77,7 +82,23 @@ def generate_tests(slug: str, req: GenerateMultipleTestsRequest, bg: BackgroundT
 @router.post("/", response_model=None, status_code=201)
 def create_test_set(slug: str, req: CreateTestSetRequest):
     """Create a new test set directory with a config.yaml."""
-    raise HTTPException(status_code=501, detail="Not implemented")
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+    test_path = problem_path / "data" / req.name
+    test_path.mkdir(parents=True, exist_ok=True)
+    test_config = test_path / "config.yaml"
+    config_obj = TestSetConfig(
+        name=req.name,
+        description=req.description,
+        points=req.points,
+        marking_style=req.marking_style,
+    )
+    test_config.write_text(
+        yaml.dump(config_obj.model_dump(), default_flow_style=False, allow_unicode=True)
+    )
+    return None
 
 
 @router.post("/{set_name}", response_model=CreateTestCaseResponse, status_code=201)
@@ -87,7 +108,45 @@ def create_test_case(slug: str, set_name: str, req: CreateTestCaseRequest):
     The file name is auto-assigned from the highest existing numeric stem + 1,
     or taken from req.name if provided.
     """
-    raise HTTPException(status_code=501, detail="Not implemented")
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+    test_path = problem_path / "data" / set_name
+    if not test_path.exists():
+        raise HTTPException(status_code=404, detail=f"Test Set '{set_name}' not found")
+
+    name = req.name
+    if name is None:
+        # try to assign input<x>, starting from 1
+        num_set = set()
+        for file in os.listdir(test_path):
+            m = re.match(r"input(\d+).in", file)
+            if m:
+                num_set.add(int(m.group(1)))
+        x = 1
+        while x in num_set:
+            x += 1
+        name = f"input{x}"
+
+    file_path = test_path / (name + ".in")
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_text(req.content)
+    case = TestCase(name=name, set_name=set_name, description=req.description)
+    cfg = file_path.with_suffix(".yaml")
+    obj = case.model_dump(
+        exclude={"name", "set_name"}, exclude_none=True, exclude_unset=True
+    )
+    if obj:
+        cfg.write_text(
+            yaml.dump(
+                obj,
+                default_flow_style=False,
+                allow_unicode=True,
+            )
+        )
+
+    return CreateTestCaseResponse(name=name)
 
 
 @router.get("/{set_name}/{test_name:path}", response_model=TestContentResponse)
