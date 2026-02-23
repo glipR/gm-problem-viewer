@@ -147,6 +147,25 @@ class JobTask:
         self.fn(*self.args, **self.kwargs)
 
 
+def purge_stale_jobs() -> int:
+    """Delete all but the latest job file in each {slug}/{type}/ folder.
+
+    Returns the count of files removed.
+    """
+    root = _cache_root()
+    deleted = 0
+    if not root.exists():
+        return deleted
+    for type_dir in root.glob("*/*"):
+        if not type_dir.is_dir():
+            continue
+        files = sorted(type_dir.glob("*.yaml"), key=lambda p: p.stem)
+        for stale in files[:-1]:  # keep only the newest
+            stale.unlink(missing_ok=True)
+            deleted += 1
+    return deleted
+
+
 def run_sequential(tasks: list[JobTask]) -> None:
     """Run a list of JobTasks one after another in the calling thread.
 
