@@ -1,6 +1,6 @@
 """---
-name: WA Failed Read
-expectation: WA
+name: RTE Failed Read
+expectation: RTE
 ---
 Doesn't split input on read.
 """
