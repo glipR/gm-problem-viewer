@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import yaml
 
 from api.utils.frontmatter import parse_frontmatter
 from api.models.problem import TestCase, TestSet, TestSetConfig, TestGenerator
+
+
+def _natural_key(p: Path) -> list[int | str]:
+    """Sort key that orders embedded integers by value, so rand-2 < rand-10."""
+    return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", p.name)]
 
 
 def get_test_generators(problem_path: Path) -> list[TestGenerator]:
@@ -18,7 +24,7 @@ def get_test_generators(problem_path: Path) -> list[TestGenerator]:
         return []
 
     generators = []
-    for generator in sorted(data_dir.glob("**/*.py")):
+    for generator in sorted(data_dir.glob("**/*.py"), key=_natural_key):
         test_set = generator.relative_to(data_dir).parts[0]
         generators.append(
             TestGenerator(
@@ -42,7 +48,7 @@ def get_test_sets(problem_path: Path) -> list[TestSet]:
         return []
 
     test_sets: list[TestSet] = []
-    for set_dir in sorted(d for d in data_dir.iterdir() if d.is_dir()):
+    for set_dir in sorted((d for d in data_dir.iterdir() if d.is_dir()), key=_natural_key):
         test_sets.append(
             TestSet(
                 name=set_dir.name,
@@ -74,7 +80,7 @@ def _load_set_config(set_dir: Path) -> TestSetConfig | None:
 
 def _get_test_cases(set_dir: Path) -> list[TestCase]:
     cases: list[TestCase] = []
-    for in_file in sorted(set_dir.glob("*.in")):
+    for in_file in sorted(set_dir.glob("*.in"), key=_natural_key):
         cases.append(
             TestCase(
                 name=in_file.stem,
