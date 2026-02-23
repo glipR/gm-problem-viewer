@@ -119,6 +119,62 @@ def get_latest_job_id(slug: str, job_type: str) -> str | None:
     return f"{slug}/{job_type}/{files[-1].stem}"
 
 
+# ---------------------------------------------------------------------------
+# Individual solution run jobs (stored one level deeper than group runs)
+# ---------------------------------------------------------------------------
+
+def _solution_key(solution_path: str) -> str:
+    """Encode a solution path as a single directory name (/ → __)."""
+    return solution_path.replace("/", "__")
+
+
+def solution_path_from_key(key: str) -> str:
+    return key.replace("__", "/")
+
+
+def create_individual_job(slug: str, solution_path: str) -> str:
+    """Create a run_solution job stored under the solution's own sub-directory."""
+    key = _solution_key(solution_path)
+    ts = int(time.time() * 1000)
+    job_id = f"{slug}/{JobType.RUN_SOLUTION}/{key}/{ts}"
+    path = _job_path(job_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    now = _now_iso()
+    data: dict[str, Any] = {
+        "id": job_id,
+        "slug": slug,
+        "type": JobType.RUN_SOLUTION,
+        "status": "pending",
+        "created_at": now,
+        "updated_at": now,
+        "result": None,
+        "error": None,
+    }
+    path.write_text(yaml.dump(data, default_flow_style=False, allow_unicode=True))
+    return job_id
+
+
+def get_latest_individual_job_id(slug: str, solution_path: str) -> str | None:
+    """Return the most recent individual run_solution job ID for one solution."""
+    key = _solution_key(solution_path)
+    dir_path = _cache_root() / slug / JobType.RUN_SOLUTION / key
+    if not dir_path.exists():
+        return None
+    files = sorted(dir_path.glob("*.yaml"), key=lambda p: p.stem)
+    if not files:
+        return None
+    return f"{slug}/{JobType.RUN_SOLUTION}/{key}/{files[-1].stem}"
+
+
+def list_individual_solution_keys(slug: str) -> list[str]:
+    """Return encoded keys for all solutions that have a cached individual run."""
+    run_dir = _cache_root() / slug / JobType.RUN_SOLUTION
+    if not run_dir.exists():
+        return []
+    return [d.name for d in run_dir.iterdir() if d.is_dir()]
+
+
 # --- Sequential orchestration ---
 
 

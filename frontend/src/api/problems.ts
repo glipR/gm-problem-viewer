@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Problem, JobStatus, CheckResult, TestSetDetail } from '../types/problem'
+import type { Problem, JobStatus, CheckResult, TestSetDetail, SolutionsRunResult } from '../types/problem'
 
 const client = axios.create({ baseURL: '/api' })
 
@@ -46,7 +46,18 @@ export async function generateTests(
 ): Promise<{ job_ids: string[] }> {
   const { data } = await client.post<{ job_ids: string[] }>(
     `/problems/${slug}/tests/generate`,
-    { requests: [ { test_set: testSet, generator_name: generatorName } ] },
+    { requests: [{ test_set: testSet, generator_name: generatorName }] },
+  )
+  return data
+}
+
+export async function generateAllTests(
+  slug: string,
+  requests: { test_set: string; generator_name: string }[],
+): Promise<{ job_ids: string[] }> {
+  const { data } = await client.post<{ job_ids: string[] }>(
+    `/problems/${slug}/tests/generate`,
+    { requests },
   )
   return data
 }
@@ -113,5 +124,10 @@ export async function runSolutions(
 
 export async function getJob(jobId: string): Promise<JobStatus> {
   const { data } = await client.get<JobStatus>(`/jobs/${jobId}`)
+  return data
+}
+
+export async function getMergedResults(slug: string): Promise<SolutionsRunResult> {
+  const { data } = await client.get<SolutionsRunResult>(`/problems/${slug}/solutions/merged-results`)
   return data
 }

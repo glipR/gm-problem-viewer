@@ -81,6 +81,24 @@ export interface JobStatus {
   error?: string
 }
 
+export interface Verdict {
+  test_case: string
+  test_set: string
+  verdict: string
+  time_ms?: number
+  comment: string
+}
+
+export interface SolutionRunResult {
+  solution_path: string
+  verdicts: Verdict[]
+  overall: string
+}
+
+export interface SolutionsRunResult {
+  solutions: SolutionRunResult[]
+}
+
 export interface CheckResult {
   name: string
   passed: boolean

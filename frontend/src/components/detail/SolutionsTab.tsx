@@ -1,23 +1,86 @@
-import { Box, Button, Group, Text, Badge, Accordion, ActionIcon, Tooltip, Alert } from '@mantine/core'
+import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import {
+  Box,
+  Button,
+  Group,
+  Text,
+  Badge,
+  Accordion,
+  ActionIcon,
+  Tooltip,
+  Alert,
+  Loader,
+  Stack,
+} from '@mantine/core'
 import { IconPlayerPlay, IconAlertTriangle } from '@tabler/icons-react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
-import type { Problem, Solution } from '../../types/problem'
-import { runSolutions } from '../../api/problems'
+import type {
+  JobStatus,
+  Problem,
+  Solution,
+  SolutionRunResult,
+  SolutionsRunResult,
+  Verdict,
+} from '../../types/problem'
+import { runSolutions, getMergedResults } from '../../api/problems'
+import { useJobPoller } from '../../hooks/useJobPoller'
 
 interface Props {
   problem: Problem
 }
 
+interface ActiveRun {
+  jobId: string
+  paths: string[]
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function verdictColor(verdict: string): string {
   switch (verdict.toUpperCase()) {
-    case 'AC': return 'green'
-    case 'WA': return 'red'
+    case 'AC':  return 'green'
+    case 'WA':  return 'red'
     case 'TLE': return 'orange'
-    case 'RE': return 'yellow'
-    default: return 'gray'
+    case 'RTE':
+    case 'RE':  return 'yellow'
+    default:    return 'gray'
   }
 }
+
+function groupBySet(verdicts: Verdict[]): Map<string, Verdict[]> {
+  const map = new Map<string, Verdict[]>()
+  for (const v of verdicts) {
+    const list = map.get(v.test_set) ?? []
+    list.push(v)
+    map.set(v.test_set, list)
+  }
+  return map
+}
+
+function setOverall(verdicts: Verdict[]): string {
+  const nonAC = verdicts.find((v) => v.verdict !== 'AC')
+  return nonAC ? nonAC.verdict : 'AC'
+}
+
+function groupByFolder(solutions: Solution[]): [string, Solution[]][] {
+  const map = new Map<string, Solution[]>()
+  for (const sol of solutions) {
+    const parts = sol.path.split('/')
+    const folder = parts.length > 1 ? parts[0] : ''
+    const existing = map.get(folder) ?? []
+    existing.push(sol)
+    map.set(folder, existing)
+  }
+  return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
+}
+
+// ---------------------------------------------------------------------------
+// ExpectationBadges
+// ---------------------------------------------------------------------------
 
 function ExpectationBadges({ expectation }: { expectation: Solution['expectation'] }) {
   if (typeof expectation === 'string') {
@@ -41,25 +104,99 @@ function ExpectationBadges({ expectation }: { expectation: Solution['expectation
   )
 }
 
-function groupByFolder(solutions: Solution[]): [string, Solution[]][] {
-  const map = new Map<string, Solution[]>()
-  for (const sol of solutions) {
-    const parts = sol.path.split('/')
-    const folder = parts.length > 1 ? parts[0] : ''
-    const existing = map.get(folder) ?? []
-    existing.push(sol)
-    map.set(folder, existing)
+// ---------------------------------------------------------------------------
+// SolutionResults — panel body showing per-set grouped verdicts
+// ---------------------------------------------------------------------------
+
+function SolutionResults({
+  result,
+  isRunning,
+}: {
+  result: SolutionRunResult | null
+  isRunning: boolean
+}) {
+  if (!result || result.verdicts.length === 0) {
+    if (isRunning) {
+      return (
+        <Group gap="xs" py={4}>
+          <Loader size="xs" />
+          <Text size="xs" c="dimmed">Running…</Text>
+        </Group>
+      )
+    }
+    return (
+      <Text size="xs" c="dimmed" fs="italic">
+        No results yet — run this solution to see per-test verdicts grouped by test set.
+      </Text>
+    )
   }
-  return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
+
+  const bySet = groupBySet(result.verdicts)
+
+  return (
+    <Stack gap={8}>
+      {[...bySet.entries()].map(([setName, verdicts]) => {
+        const overall = setOverall(verdicts)
+        return (
+          <Box key={setName}>
+            <Group gap={6} mb={4} align="center">
+              <Text size="xs" fw={600} style={{ fontFamily: 'monospace' }}>
+                {setName}
+              </Text>
+              <Badge size="xs" color={verdictColor(overall)} variant="light">
+                {overall}
+              </Badge>
+              {isRunning && <Loader size={10} />}
+            </Group>
+            <Group gap={4} wrap="wrap">
+              {verdicts.map((v) => (
+                <Tooltip
+                  key={v.test_case}
+                  label={`${v.test_case}: ${v.verdict}${v.comment ? ` — ${v.comment}` : ''}`}
+                  withArrow
+                >
+                  <Badge
+                    size="xs"
+                    color={verdictColor(v.verdict)}
+                    variant={v.verdict === 'AC' ? 'dot' : 'filled'}
+                    style={{ fontFamily: 'monospace', cursor: 'default' }}
+                  >
+                    {v.test_case}
+                  </Badge>
+                </Tooltip>
+              ))}
+            </Group>
+          </Box>
+        )
+      })}
+    </Stack>
+  )
 }
 
-function SolutionItem({ solution, slug }: { solution: Solution; slug: string }) {
+// ---------------------------------------------------------------------------
+// SolutionItem
+// ---------------------------------------------------------------------------
+
+function SolutionItem({
+  solution,
+  slug,
+  result,
+  isRunning,
+  onRunStarted,
+}: {
+  solution: Solution
+  slug: string
+  result: SolutionRunResult | null
+  isRunning: boolean
+  onRunStarted: (jobId: string, paths: string[]) => void
+}) {
   const { mutate: run, isPending } = useMutation({
     mutationFn: () => runSolutions(slug, { solution_paths: [solution.path] }),
-    onSuccess: () =>
-      notifications.show({ message: `Running ${solution.name}…`, color: 'blue' }),
+    onSuccess: (data) => {
+      onRunStarted(data.job_ids[0], [solution.path])
+    },
     onError: () =>
-      notifications.show({ message: 'Solution running not yet implemented', color: 'orange' }),
+      notifications.show({ message: 'Failed to start solution run', color: 'red' }),
   })
 
   const langColor = solution.language === 'cpp' ? 'orange' : 'blue'
@@ -85,11 +222,22 @@ function SolutionItem({ solution, slug }: { solution: Solution; slug: string }) 
           </Group>
           <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
             <ExpectationBadges expectation={solution.expectation} />
+            {result && (
+              <Badge
+                size="xs"
+                color={verdictColor(result.overall)}
+                variant="filled"
+              >
+                {isRunning ? '…' : result.overall}
+              </Badge>
+            )}
+            {isRunning && !result && <Loader size={12} />}
             <Tooltip label={`Run ${solution.name}`}>
               <ActionIcon
                 size="xs"
                 variant="subtle"
                 loading={isPending}
+                disabled={isRunning}
                 onClick={(e) => {
                   e.stopPropagation()
                   run()
@@ -103,28 +251,72 @@ function SolutionItem({ solution, slug }: { solution: Solution; slug: string }) 
       </Accordion.Control>
       <Accordion.Panel>
         <Box px="xs" py="sm">
-          <Text size="xs" c="dimmed" mb={4} tt="uppercase" fw={600}>
+          <Text size="xs" c="dimmed" mb={6} tt="uppercase" fw={600}>
             Test results from most recent run
           </Text>
-          <Text size="xs" c="dimmed" fs="italic">
-            No results yet — run this solution to see per-test verdicts grouped by test set.
-          </Text>
+          <SolutionResults result={result} isRunning={isRunning} />
         </Box>
       </Accordion.Panel>
     </Accordion.Item>
   )
 }
 
+// ---------------------------------------------------------------------------
+// SolutionsTab
+// ---------------------------------------------------------------------------
+
 export default function SolutionsTab({ problem }: Props) {
-  const { mutate: runAll, isPending } = useMutation({
+  const [activeRun, setActiveRun] = useState<ActiveRun | null>(null)
+  const qc = useQueryClient()
+
+  // Merged base results: latest group run + latest individual run per solution,
+  // newest updated_at wins for any given solution path.
+  const { data: mergedResults, isLoading: mergedLoading } = useQuery({
+    queryKey: ['solution-merged-results', problem.slug],
+    queryFn: () => getMergedResults(problem.slug),
+  })
+
+  // Poll the active job; on completion clear the live overlay and refresh merged results
+  const { data: jobData } = useJobPoller(activeRun?.jobId ?? null, {
+    onDone: (_job: JobStatus) => {
+      setActiveRun(null)
+      qc.invalidateQueries({ queryKey: ['solution-merged-results', problem.slug] })
+    },
+  })
+
+  const jobStatus = jobData?.status
+  const jobIsRunning = jobStatus === 'running' || jobStatus === 'pending'
+
+  const liveResult = jobData?.result as SolutionsRunResult | null | undefined
+
+  // Live job data overlays the merged base while a job is active
+  function getResult(path: string): SolutionRunResult | null {
+    return (
+      liveResult?.solutions.find((s) => s.solution_path === path) ??
+      mergedResults?.solutions.find((s) => s.solution_path === path) ??
+      null
+    )
+  }
+
+  function isSolutionRunning(path: string): boolean {
+    if (!jobIsRunning) return false
+    return activeRun?.paths.includes(path) ?? true
+  }
+
+  function handleRunStarted(jobId: string, paths: string[]) {
+    setActiveRun({ jobId, paths })
+  }
+
+  const { mutate: runAll, isPending: runAllPending } = useMutation({
     mutationFn: () =>
       runSolutions(problem.slug, {
         solution_paths: problem.solutions.map((s) => s.path),
       }),
-    onSuccess: () =>
-      notifications.show({ message: 'Running all solutions…', color: 'blue' }),
+    onSuccess: (data) => {
+      handleRunStarted(data.job_ids[0], problem.solutions.map((s) => s.path))
+    },
     onError: () =>
-      notifications.show({ message: 'Solution running not yet implemented', color: 'orange' }),
+      notifications.show({ message: 'Failed to start solution run', color: 'red' }),
   })
 
   if (problem.solutions.length === 0) {
@@ -141,15 +333,23 @@ export default function SolutionsTab({ problem }: Props) {
 
   return (
     <Box p="xl">
-      <Group mb="md">
+      <Group mb="md" justify="space-between">
         <Button
           size="xs"
           leftSection={<IconPlayerPlay size={14} />}
-          loading={isPending}
+          loading={runAllPending}
           onClick={() => runAll()}
         >
           Run All Solutions
         </Button>
+        {(mergedLoading || jobIsRunning) && (
+          <Group gap="xs">
+            <Loader size="xs" />
+            <Text size="xs" c="dimmed">
+              {mergedLoading ? 'Loading results…' : 'Job running…'}
+            </Text>
+          </Group>
+        )}
       </Group>
 
       {groups.map(([folder, solutions]) => (
@@ -166,7 +366,14 @@ export default function SolutionsTab({ problem }: Props) {
           </Text>
           <Accordion variant="contained" radius="sm">
             {solutions.map((sol) => (
-              <SolutionItem key={sol.path} solution={sol} slug={problem.slug} />
+              <SolutionItem
+                key={sol.path}
+                solution={sol}
+                slug={problem.slug}
+                result={getResult(sol.path)}
+                isRunning={isSolutionRunning(sol.path)}
+                onRunStarted={handleRunStarted}
+              />
             ))}
           </Accordion>
         </Box>

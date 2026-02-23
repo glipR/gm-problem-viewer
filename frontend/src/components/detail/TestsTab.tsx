@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import {
   Box,
   Button,
@@ -29,15 +29,17 @@ import {
   IconFile,
   IconCode,
 } from '@tabler/icons-react'
-import type { Problem, TestSetDetail } from '../../types/problem'
+import type { Problem, TestSetDetail, JobStatus } from '../../types/problem'
 import {
   getTestSets,
   getTestContent,
   generateTests,
+  generateAllTests,
   createTestSet,
   createTestCase,
   updateTestCaseDescription,
 } from '../../api/problems'
+import { useJobPoller } from '../../hooks/useJobPoller'
 
 interface Props {
   problem: Problem
@@ -219,8 +221,27 @@ export default function TestsTab({ problem }: Props) {
   const [editDescription, setEditDescription] = useState('')
   const [addSetOpen, { open: openAddSet, close: closeAddSet }] = useDisclosure(false)
   const [addTestSet, setAddTestSet] = useState<string | null>(null)
+  const [genJobId, setGenJobId] = useState<string | null>(null)
 
   const qc = useQueryClient()
+
+  const handleGenDone = useCallback(
+    (job: JobStatus) => {
+      setGenJobId(null)
+      if (job.status === 'done') {
+        qc.invalidateQueries({ queryKey: ['tests', problem.slug] })
+        notifications.show({ message: 'Tests generated', color: 'green' })
+      } else {
+        notifications.show({
+          message: `Generation failed${job.error ? `: ${job.error}` : ''}`,
+          color: 'red',
+        })
+      }
+    },
+    [qc, problem.slug],
+  )
+
+  useJobPoller(genJobId, { onDone: handleGenDone })
 
   const { data: testSets, isLoading, isError } = useQuery({
     queryKey: ['tests', problem.slug],
@@ -238,9 +259,23 @@ export default function TestsTab({ problem }: Props) {
   const { mutate: generate } = useMutation({
     mutationFn: (params: { setName: string; genName: string }) =>
       generateTests(problem.slug, params.setName, params.genName),
-    onSuccess: () => notifications.show({ message: 'Generation started', color: 'blue' }),
+    onSuccess: (data) => {
+      setGenJobId(data.job_ids[0])
+      notifications.show({ message: 'Generation started…', color: 'blue' })
+    },
     onError: () =>
       notifications.show({ message: 'Test generation not yet implemented', color: 'orange' }),
+  })
+
+  const { mutate: generateAll, isPending: generateAllPending } = useMutation({
+    mutationFn: (requests: { test_set: string; generator_name: string }[]) =>
+      generateAllTests(problem.slug, requests),
+    onSuccess: (data) => {
+      setGenJobId(data.job_ids[0])
+      notifications.show({ message: 'Running all generators…', color: 'blue' })
+    },
+    onError: () =>
+      notifications.show({ message: 'Test generation failed to start', color: 'red' }),
   })
 
   const { mutate: saveDesc } = useMutation({
@@ -299,14 +334,32 @@ export default function TestsTab({ problem }: Props) {
             <Text size="sm" fw={600}>
               Test Sets
             </Text>
-            <Button
-              size="xs"
-              variant="light"
-              leftSection={<IconPlus size={12} />}
-              onClick={openAddSet}
-            >
-              Add Set
-            </Button>
+            <Group gap={6}>
+              <Button
+                size="xs"
+                variant="light"
+                color="violet"
+                leftSection={<IconPlayerPlay size={12} />}
+                loading={generateAllPending || !!genJobId}
+                disabled={sets.every((s) => s.generators.length === 0)}
+                onClick={() => {
+                  const requests = sets.flatMap((s) =>
+                    s.generators.map((g) => ({ test_set: s.name, generator_name: g.name })),
+                  )
+                  generateAll(requests)
+                }}
+              >
+                Run All Generators
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<IconPlus size={12} />}
+                onClick={openAddSet}
+              >
+                Add Set
+              </Button>
+            </Group>
           </Group>
         </Box>
 
@@ -380,11 +433,12 @@ export default function TestsTab({ problem }: Props) {
                               {gen.name}
                             </Text>
                           </Group>
-                          <Tooltip label={`Run ${gen.name}`}>
+                          <Tooltip label={genJobId ? 'Generation in progress…' : `Run ${gen.name}`}>
                             <ActionIcon
                               size="xs"
                               variant="subtle"
                               color="violet"
+                              loading={!!genJobId}
                               onClick={() =>
                                 generate({ setName: set.name, genName: gen.name })
                               }
