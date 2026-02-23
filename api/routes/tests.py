@@ -6,14 +6,17 @@ TODO: Implement all endpoints below.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from api.collection.test_sets import get_test_sets, get_test_generators
 from api.config import get_settings
+from api.execution.run_testgen import run_testgen_job
+from api.jobs import JobType, create_job
 from api.models.problem import (
     CreateTestCaseRequest,
     CreateTestCaseResponse,
     CreateTestSetRequest,
+    GenerateMultipleTestsRequest,
     GenerateTestsRequest,
     JobResponse,
     TestContentResponse,
@@ -48,7 +51,7 @@ def list_test_sets(slug: str):
 
 
 @router.post("/generate", response_model=JobResponse)
-def generate_tests(slug: str, req: GenerateTestsRequest):
+def generate_tests(slug: str, req: GenerateMultipleTestsRequest, bg: BackgroundTasks):
     """
     Enqueue test generation for a problem by executing the named generator
     script. Returns a job_id to poll via GET /jobs/{job_id}.
@@ -56,7 +59,15 @@ def generate_tests(slug: str, req: GenerateTestsRequest):
     The generator script is run from within its own directory (so that
     `Path(__file__).parent` resolves correctly).
     """
-    raise HTTPException(status_code=501, detail="Test generation not yet implemented")
+    settings = get_settings()
+    problem_dir = settings.problems_root / slug
+    if not problem_dir.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+
+    job_id = create_job(slug, JobType.GENERATE_TESTS)
+    bg.add_task(run_testgen_job, problem_dir, req, job_id)
+
+    return JobResponse(job_ids=[job_id])
 
 
 @router.post("/", response_model=None, status_code=201)
@@ -82,7 +93,9 @@ def get_test_case(slug: str, set_name: str, test_name: str):
 
 
 @router.patch("/{set_name}/{test_name}", response_model=None)
-def update_test_case(slug: str, set_name: str, test_name: str, req: UpdateTestCaseRequest):
+def update_test_case(
+    slug: str, set_name: str, test_name: str, req: UpdateTestCaseRequest
+):
     """Update the description in a test case's sidecar .yaml."""
     raise HTTPException(status_code=501, detail="Not implemented")
 

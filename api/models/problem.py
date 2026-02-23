@@ -109,6 +109,9 @@ class TestGenerator(BaseModel):
     test_set: str  # Set folder
     description: str = ""  # Sourced from docstring; empty if none present
 
+    def full_path(self, problem_dir: Path):
+        return problem_dir / "data" / self.test_set / self.name
+
 
 # --- Request / Response models for API operations ---
 
@@ -157,9 +160,8 @@ class GenerateTestsRequest(BaseModel):
     generator_name: str = "gen_tests.py"
 
 
-class GenerateTestsResponse(BaseModel):
-    test_set: str
-    generated: list[str]  # names of newly created .in files
+class GenerateMultipleTestsRequest(BaseModel):
+    requests: list[GenerateTestsRequest]
 
 
 class ExportRequest(BaseModel):

@@ -46,7 +46,7 @@ export async function generateTests(
 ): Promise<{ job_ids: string[] }> {
   const { data } = await client.post<{ job_ids: string[] }>(
     `/problems/${slug}/tests/generate`,
-    { test_set: testSet, generator_name: generatorName },
+    { requests: [ { test_set: testSet, generator_name: generatorName } ] },
   )
   return data
 }
