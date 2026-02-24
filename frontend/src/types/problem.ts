@@ -8,7 +8,7 @@ export interface ProblemConfig {
   type: 'standard' | 'interactive'
   tags: string[]
   difficulty?: number
-  state: 'draft' | 'in-progress' | 'review' | 'archive'
+  state: 'draft' | 'in-progress' | 'review' | 'complete'
   limits: ProblemLimits
   author: string
 }
@@ -46,7 +46,7 @@ export interface Problem {
   }
 }
 
-export type ProblemState = 'draft' | 'in-progress' | 'review' | 'archive'
+export type ProblemState = 'draft' | 'in-progress' | 'review' | 'complete'
 
 export interface TestCase {
   name: string

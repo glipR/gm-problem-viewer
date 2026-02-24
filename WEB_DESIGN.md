@@ -21,7 +21,7 @@ This view shows problems that are still in development, and their progress. Ther
 2. Lane 2: In progress - For problems in active development
 3. Lane 3: Review - These problems are more or less complete, save for some review, but haven't been used in a contest yet
 
-There is a 4th state - archive, for problems that have been used in a contest.
+There is a 4th state - complete, for problems that have been used in a contest.
 
 Problems in the kanban board appear as tiles. These tiles show the following information:
 

@@ -6,12 +6,20 @@ const STATE_COLORS: Record<string, string> = {
   draft: 'gray',
   'in-progress': 'blue',
   review: 'orange',
-  archive: 'violet',
+  complete: 'green',
 }
 
 interface Props {
   problem: Problem
   onSelect?: (slug: string) => void
+}
+
+const staticOverflow = {
+  label: {
+    overflow: 'visible',
+    textOverflow: 'clip',
+    whiteSpace: 'nowrap'
+  }
 }
 
 export default function StaticProblemCard({ problem, onSelect }: Props) {
@@ -26,25 +34,22 @@ export default function StaticProblemCard({ problem, onSelect }: Props) {
     >
       <Stack gap={6}>
         {/* Top row: slug + state badge + tags + difficulty */}
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <Group justify="space-between" align="flex-start" wrap="nowrap" gap={4}>
+          <Tooltip label={problem.config.state?.toUpperCase()}>
+            <Badge circle size="xs" color={STATE_COLORS[problem.config.state] ?? 'gray'}></Badge>
+          </Tooltip>
           <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace' }}>
             {problem.slug}
           </Text>
+          <div style={{flexGrow: 1 /* Spacer */}}></div>
           <Group gap={4} wrap="nowrap">
-            <Badge
-              size="xs"
-              variant="dot"
-              color={STATE_COLORS[problem.config.state] ?? 'gray'}
-            >
-              {problem.config.state}
-            </Badge>
             {problem.config.tags.map((tag) => (
               <Badge key={tag} size="xs" variant="light">
                 {tag}
               </Badge>
             ))}
             {problem.config.difficulty != null && (
-              <Badge size="xs" variant="filled" color="indigo">
+              <Badge size="xs" variant="filled" color="indigo" styles={staticOverflow}>
                 {problem.config.difficulty}
               </Badge>
             )}

@@ -36,7 +36,7 @@ const STATE_COLORS: Record<string, string> = {
   draft: 'gray',
   'in-progress': 'blue',
   review: 'yellow',
-  archive: 'green',
+  complete: 'green',
 }
 
 export default function ProblemDetailPage({ slug, onBack }: Props) {
@@ -99,62 +99,56 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
             </Text>
           </Group>
 
-          {/* Title */}
-          <Text size="xl" fw={700} lh={1.2}>
-            {problem.config.name}
-          </Text>
-
-          {/* Badges row: type, state, difficulty, tags */}
-          <Group gap={6} wrap="wrap">
+          {/* Title and basic info */}
+          <Group gap={12} wrap="wrap">
+            <Tooltip label={problem.config.state?.toUpperCase()}>
+              <Badge circle size="md" color={STATE_COLORS[problem.config.state] ?? 'gray'}></Badge>
+            </Tooltip>
+            <Text size="xl" fw={700} lh={1.2}>
+              {problem.config.name}
+            </Text>
             <Badge
               size="sm"
-              variant="light"
+              variant="outline"
               color={problem.config.type === 'interactive' ? 'violet' : 'blue'}
             >
               {problem.config.type}
             </Badge>
-            <Badge size="sm" variant="light" color={STATE_COLORS[problem.config.state] ?? 'gray'}>
-              {problem.config.state}
-            </Badge>
-            {problem.config.difficulty != null && (
-              <Badge size="sm" variant="filled" color="indigo">
-                {problem.config.difficulty}
-              </Badge>
-            )}
-            {problem.config.tags.map((tag) => (
-              <Badge key={tag} size="sm" variant="outline" color="gray">
-                {tag}
-              </Badge>
-            ))}
           </Group>
 
-          {/* Author + limits */}
-          <Group gap="lg">
-            <Text size="sm" c="dimmed">
-              by{' '}
-              <Text component="span" fw={500} c="inherit">
-                {problem.config.author}
+          {/* Badges row: difficulty, tags */}
+          <Group justify="space-between" align="center">
+            <Group gap={6} wrap="wrap">
+              {problem.config.difficulty != null && (
+                <Badge size="sm" variant="filled" color="indigo">
+                  {problem.config.difficulty}
+                </Badge>
+              )}
+              {problem.config.tags.map((tag) => (
+                <Badge key={tag} size="sm" variant="light">
+                  {tag}
+                </Badge>
+              ))}
+            </Group>
+
+            {/* Author + limits */}
+            <Group gap="lg">
+              <Text size="sm" c="dimmed">
+                by{' '}
+                <Text component="span" fw={500} c="inherit">
+                  {problem.config.author}
+                </Text>
               </Text>
-            </Text>
-            <Text size="sm" c="dimmed">
-              {problem.config.limits.time}s / {memMB}MB
-            </Text>
+              <Text size="sm" c="dimmed">
+                {problem.config.limits.time}s / {memMB}MB
+              </Text>
+            </Group>
           </Group>
 
           {/* Facet icons + action buttons */}
           <Group justify="space-between" align="center">
             <Group gap="md">
               <FacetIcons problem={problem} />
-              <Tooltip label="Export">
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="sm"
-                  onClick={() => notifications.show({ message: 'Export not yet implemented', color: 'orange' })}
-                >
-                  <IconUpload size={14} />
-                </ActionIcon>
-              </Tooltip>
             </Group>
 
             <Group gap="xs">
@@ -184,6 +178,15 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
                 onClick={() => reviewAI()}
               >
                 AI Review
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="green"
+                leftSection={<IconUpload size={14} />}
+                onClick={() => notifications.show({ message: 'Export not yet implemented', color: 'orange' })}
+              >
+                Export
               </Button>
             </Group>
           </Group>

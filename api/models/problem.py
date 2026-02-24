@@ -30,7 +30,7 @@ class ProblemConfig(BaseModel):
     tags: list[str] = []
     difficulty: int | None = None
     export_config: dict[str, ExportTarget] = {}
-    state: str  # "draft" | "in-progress" | "review" | "archive"
+    state: str  # "draft" | "in-progress" | "review" | "complete"
     contests: list[str] | None = None
     limits: ProblemLimits
     author: str
@@ -194,7 +194,7 @@ class JobStatusResponse(BaseModel):
 
 
 class PatchProblemRequest(BaseModel):
-    state: str  # "draft" | "in-progress" | "review" | "archive"
+    state: str  # "draft" | "in-progress" | "review" | "complete"
 
 
 # --- Statement ---
