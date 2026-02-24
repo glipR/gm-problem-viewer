@@ -211,7 +211,7 @@ function SolutionItem({
                 {solution.language}
               </Badge>
             )}
-            <Text size="sm" fw={500} truncate>
+            <Text size="sm" fw={500} truncate style={{flexShrink: 0}}>
               {solution.name}
             </Text>
             {solution.description && (
@@ -251,6 +251,9 @@ function SolutionItem({
       </Accordion.Control>
       <Accordion.Panel>
         <Box px="xs" py="sm">
+          {solution.description && <Text size="sm" c="dimmed" style={{marginBottom: '10px', whiteSpace: "pre-wrap"}}>
+            { solution.description }
+          </Text> }
           <Text size="xs" c="dimmed" mb={6} tt="uppercase" fw={600}>
             Test results from most recent run
           </Text>
