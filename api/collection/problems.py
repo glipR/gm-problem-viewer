@@ -83,6 +83,41 @@ def get_problem(problems_dir: Path, problem_slug: str) -> Problem:
     )
 
 
+def search_problems(
+    problems_dir: Path,
+    q: str | None = None,
+    tags: list[str] | None = None,
+) -> list[Problem]:
+    """Search problems by free-text query and/or tag filter.
+
+    *q* is matched case-insensitively against the problem name and the raw
+    content of ``statement.md``.  *tags* is an AND-filter: every supplied tag
+    must appear in ``config.tags``.
+    """
+    problems = list_problems(problems_dir)
+
+    if tags:
+        problems = [p for p in problems if all(t in p.config.tags for t in tags)]
+
+    if q:
+        q_lower = q.lower()
+        matched: list[Problem] = []
+        for problem in problems:
+            if q_lower in problem.config.name.lower():
+                matched.append(problem)
+                continue
+            statement_path = problems_dir / problem.slug / "statement.md"
+            if statement_path.exists():
+                try:
+                    if q_lower in statement_path.read_text(encoding="utf-8").lower():
+                        matched.append(problem)
+                except Exception:
+                    pass
+        problems = matched
+
+    return problems
+
+
 def patch_problem_config(problems_dir: Path, problem_slug: str, **kwargs):
     problem_path = problems_dir / problem_slug
     config_path = problem_path / "config.yaml"

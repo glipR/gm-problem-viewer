@@ -4,12 +4,13 @@ Problems router — listing and detail views for problems on disk.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from api.collection.problems import (
     list_problems as col_list_problems,
     get_problem as col_get_problem,
     patch_problem_config as col_patch_problem_config,
+    search_problems as col_search_problems,
 )
 from api.config import get_settings
 from api.models.problem import (
@@ -28,6 +29,16 @@ def list_problems():
     problems = col_list_problems(settings.problems_root)
 
     return problems
+
+
+@router.get("/search", response_model=list[Problem])
+def search_problems(
+    q: str | None = Query(default=None, description="Free-text search on name and statement"),
+    tags: list[str] = Query(default=[], description="AND-filter by tag"),
+):
+    """Search problems by free-text and/or tags. Returns lightweight Problem list."""
+    settings = get_settings()
+    return col_search_problems(settings.problems_root, q=q or None, tags=tags)
 
 
 @router.get("/{slug}", response_model=Problem)

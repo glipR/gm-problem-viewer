@@ -1,8 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getProblems, patchProblemState } from '../api/problems'
+import { getProblems, patchProblemState, searchProblems } from '../api/problems'
 
 export function useProblems() {
   return useQuery({ queryKey: ['problems'], queryFn: getProblems })
+}
+
+export function useSearchProblems(q: string, tags: string[]) {
+  return useQuery({
+    queryKey: ['problems', 'search', q, tags],
+    queryFn: () => searchProblems(q, tags),
+  })
 }
 
 export function usePatchProblemState() {

@@ -122,6 +122,14 @@ export async function runSolutions(
   return data
 }
 
+export async function searchProblems(q: string, tags: string[]): Promise<Problem[]> {
+  const params = new URLSearchParams()
+  if (q) params.set('q', q)
+  tags.forEach((tag) => params.append('tags', tag))
+  const { data } = await client.get<Problem[]>(`/problems/search?${params}`)
+  return data
+}
+
 export async function getJob(jobId: string): Promise<JobStatus> {
   const { data } = await client.get<JobStatus>(`/jobs/${jobId}`)
   return data
