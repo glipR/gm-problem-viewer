@@ -1,11 +1,15 @@
 import { Box, Button, Group, Loader, Alert, ScrollArea } from '@mantine/core'
 import { IconBrain, IconAlertTriangle } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
+import { createContext, useContext } from 'react'
 import Markdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
+import rehypeRaw from 'rehype-raw'
 import 'katex/dist/katex.min.css'
 import { getStatement } from '../../api/problems'
+
+const InPreContext = createContext(false)
 
 interface Props {
   slug: string
@@ -65,7 +69,7 @@ export default function StatementTab({ slug }: Props) {
           >
             <Markdown
               remarkPlugins={[remarkMath]}
-              rehypePlugins={[rehypeKatex]}
+              rehypePlugins={[rehypeRaw, rehypeKatex]}
               components={{
                 h1: ({ children }) => (
                   <h1 style={{ fontSize: 22, marginBottom: 8, fontFamily: 'system-ui, sans-serif' }}>
@@ -82,9 +86,8 @@ export default function StatementTab({ slug }: Props) {
                     {children}
                   </h3>
                 ),
-                code: ({ children, className }) => {
-                  const isBlock = className != null
-                  return isBlock ? (
+                pre: ({ children }) => (
+                  <InPreContext.Provider value={true}>
                     <pre
                       style={{
                         background: 'var(--mantine-color-gray-1)',
@@ -93,10 +96,17 @@ export default function StatementTab({ slug }: Props) {
                         fontFamily: 'monospace',
                         fontSize: 13,
                         overflowX: 'auto',
+                        margin: '8px 0',
                       }}
                     >
-                      <code>{children}</code>
+                      {children}
                     </pre>
+                  </InPreContext.Provider>
+                ),
+                code: ({ children }) => {
+                  const inPre = useContext(InPreContext)
+                  return inPre ? (
+                    <code>{children}</code>
                   ) : (
                     <code
                       style={{
@@ -110,6 +120,13 @@ export default function StatementTab({ slug }: Props) {
                       {children}
                     </code>
                   )
+                },
+                img: ({ src, alt, ...props }) => {
+                  const resolvedSrc =
+                    src && !src.startsWith('http') && !src.startsWith('/')
+                      ? `/api/problems/${slug}/files/${src}`
+                      : src
+                  return <img src={resolvedSrc} alt={alt} style={{ maxWidth: '100%' }} {...props} />
                 },
                 table: ({ children }) => (
                   <table
