@@ -64,7 +64,12 @@ def run_validators_job(
         )
 
     except Exception as exc:
-        update_job(job_id, status="failed", error=str(exc))
+        update_job(
+            job_id,
+            status="failed",
+            error=str(exc),
+            result={"results": [r.model_dump() for r in results]} if results else {},
+        )
         raise
 
 
@@ -72,6 +77,7 @@ def run_input_validator(problem_path: Path, validator: Validator, test_case: Tes
     result = run_python_file(
         validator.full_path(problem_path),
         test_case.full_path(problem_path),
+        timeout_sec=5,
     )
     return ValidatorResult(
         validator=validator.path,
