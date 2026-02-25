@@ -39,6 +39,7 @@ def run_all_checks(problem: Problem) -> ReviewResult:
         statement_has_basic_interaction_blocks(problem),
         has_sample_test_case(problem),
         has_ac_solution(problem),
+        has_test_for_each_expectation(problem),
     ]
     phase2: list[CheckResult] = [
         has_input_validation(problem),
