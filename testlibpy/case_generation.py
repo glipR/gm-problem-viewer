@@ -8,6 +8,11 @@ import yaml
 rpt_map = defaultdict(lambda: 0)
 
 
+def _transform_test_contents(data: str):
+    # Always add trailing newline
+    return data.strip() + "\n"
+
+
 def write_test_case(
     case_data: str,
     rpt_name=None,
@@ -36,10 +41,10 @@ def write_test_case(
         rpt_map[rpt_name] += 1
         fname = f"{rpt_name}{rpt_map[rpt_name]}.in"
     with open(directory / fname, "w") as f:
-        f.write(case_data)
+        f.write(_transform_test_contents(case_data))
     if out_data:
         with open((directory / fname).with_suffix(".out"), "w") as f:
-            f.write(out_data)
+            f.write(_transform_test_contents(out_data))
 
     # Configuration
     def get_data_dir(p: Path):
