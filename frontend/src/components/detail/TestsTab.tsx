@@ -38,6 +38,8 @@ import {
   createTestSet,
   createTestCase,
   updateTestCaseDescription,
+  openGeneratorInEditor,
+  openTestCaseInEditor,
 } from '../../api/problems'
 import { useJobPoller } from '../../hooks/useJobPoller'
 
@@ -433,19 +435,33 @@ export default function TestsTab({ problem }: Props) {
                               {gen.name}
                             </Text>
                           </Group>
-                          <Tooltip label={genJobId ? 'Generation in progress…' : `Run ${gen.name}`}>
-                            <ActionIcon
-                              size="xs"
-                              variant="subtle"
-                              color="violet"
-                              loading={!!genJobId}
-                              onClick={() =>
-                                generate({ setName: set.name, genName: gen.name })
-                              }
-                            >
-                              <IconPlayerPlay size={10} />
-                            </ActionIcon>
-                          </Tooltip>
+                          <Group gap={2} wrap="nowrap">
+                            <Tooltip label="Open in Cursor">
+                              <ActionIcon
+                                size="xs"
+                                variant="subtle"
+                                color="violet"
+                                onClick={() =>
+                                  openGeneratorInEditor(problem.slug, set.name, gen.name)
+                                }
+                              >
+                                <IconCode size={10} />
+                              </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label={genJobId ? 'Generation in progress…' : `Run ${gen.name}`}>
+                              <ActionIcon
+                                size="xs"
+                                variant="subtle"
+                                color="violet"
+                                loading={!!genJobId}
+                                onClick={() =>
+                                  generate({ setName: set.name, genName: gen.name })
+                                }
+                              >
+                                <IconPlayerPlay size={10} />
+                              </ActionIcon>
+                            </Tooltip>
+                          </Group>
                         </Group>
                       ))}
 
@@ -468,32 +484,46 @@ export default function TestsTab({ problem }: Props) {
                                 ? 'var(--mantine-color-blue-0)'
                                 : undefined,
                             }}
+                            justify="space-between"
                             onClick={() =>
                               selectTest(set.name, tc.name, tc.description)
                             }
                           >
-                            <IconFile
-                              size={12}
-                              color={
-                                isSelected
-                                  ? 'var(--mantine-color-blue-6)'
-                                  : 'var(--mantine-color-gray-5)'
-                              }
-                              style={{ flexShrink: 0 }}
-                            />
-                            <Text
-                              size="xs"
-                              style={{ fontFamily: 'monospace', minWidth: 0 }}
-                              truncate
-                              c={isSelected ? 'blue' : undefined}
-                            >
-                              {tc.name}
-                            </Text>
-                            {tc.description && (
-                              <Text size="xs" c="dimmed" truncate style={{ opacity: 0.7 }}>
-                                {tc.description}
+                            <Group gap={6} wrap="nowrap">
+                              <IconFile
+                                size={12}
+                                color={
+                                  isSelected
+                                    ? 'var(--mantine-color-blue-6)'
+                                    : 'var(--mantine-color-gray-5)'
+                                }
+                                style={{ flexShrink: 0 }}
+                              />
+                              <Text
+                                size="xs"
+                                style={{ fontFamily: 'monospace', minWidth: 0 }}
+                                truncate
+                                c={isSelected ? 'blue' : undefined}
+                              >
+                                {tc.name}
                               </Text>
-                            )}
+                              {tc.description && (
+                                <Text size="xs" c="dimmed" truncate style={{ opacity: 0.7 }}>
+                                  {tc.description}
+                                </Text>
+                              )}
+                            </Group>
+                            <Group gap={2} wrap="nowrap">
+                            <Tooltip label="Open in Cursor">
+                              <ActionIcon
+                                size="xs"
+                                variant="subtle"
+                                onClick={() => openTestCaseInEditor(problem.slug, tc.set_name, tc.name)}
+                              >
+                                <IconCode size={12} />
+                              </ActionIcon>
+                            </Tooltip>
+                            </Group>
                           </Group>
                         )
                       })}
@@ -560,11 +590,22 @@ export default function TestsTab({ problem }: Props) {
               <Text size="sm" fw={600} style={{ fontFamily: 'monospace' }}>
                 {selected.setName}/{selected.testName}.in
               </Text>
-              {selectedTestCase?.description && (
-                <Text size="xs" c="dimmed">
-                  {selectedTestCase.description}
-                </Text>
-              )}
+              <Group gap={6}>
+                {selectedTestCase?.description && (
+                  <Text size="xs" c="dimmed">
+                    {selectedTestCase.description}
+                  </Text>
+                )}
+                <Tooltip label="Open in Cursor">
+                  <ActionIcon
+                    size="xs"
+                    variant="subtle"
+                    onClick={() => openTestCaseInEditor(problem.slug, selected.setName, selected.testName)}
+                  >
+                    <IconCode size={12} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
             </Group>
 
             <ScrollArea style={{ flex: 1, minHeight: 0 }}>

@@ -13,7 +13,7 @@ import {
   Loader,
   Stack,
 } from '@mantine/core'
-import { IconPlayerPlay, IconAlertTriangle, IconBrandPython, IconBrandCpp, IconQuestionMark } from '@tabler/icons-react'
+import { IconPlayerPlay, IconAlertTriangle, IconBrandPython, IconBrandCpp, IconQuestionMark, IconCode } from '@tabler/icons-react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
 import type {
@@ -23,7 +23,7 @@ import type {
   SolutionRunResult,
   Verdict,
 } from '../../types/problem'
-import { runSolutions, getMergedResults } from '../../api/problems'
+import { runSolutions, getMergedResults, openSolutionInEditor } from '../../api/problems'
 import { useJobPoller } from '../../hooks/useJobPoller'
 
 interface Props {
@@ -235,6 +235,18 @@ function SolutionItem({
               </Badge>
             )}
             {isRunning && !result && <Loader size={12} />}
+            <Tooltip label="Open in Cursor">
+              <ActionIcon
+                size="xs"
+                variant="subtle"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openSolutionInEditor(slug, solution.path)
+                }}
+              >
+                <IconCode size={12} />
+              </ActionIcon>
+            </Tooltip>
             <Tooltip label={`Run ${solution.name}`}>
               <ActionIcon
                 size="xs"

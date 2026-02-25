@@ -4,6 +4,8 @@ Statement router — serve and review a problem's statement.md.
 
 from __future__ import annotations
 
+import subprocess
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
@@ -25,6 +27,22 @@ def get_statement(slug: str):
     if content is None:
         raise HTTPException(status_code=404, detail="statement.md not found")
     return StatementResponse(raw=content)
+
+
+@router.post("/statement/open")
+def open_statement_in_editor(slug: str):
+    """Open statement.md in Cursor with the problems root as workspace."""
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+
+    file_path = problem_path / "statement.md"
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="statement.md not found")
+
+    subprocess.Popen(["cursor", str(settings.problems_root), str(file_path)])
+    return {"ok": True}
 
 
 @router.post("/statement/review", response_model=JobResponse)

@@ -7,6 +7,8 @@ TODO: Implement subprocess execution with time limiting, stdin/stdout piping,
 
 from __future__ import annotations
 
+import subprocess
+
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from api.config import get_settings
@@ -23,6 +25,7 @@ from api.jobs import (
 )
 from api.models.problem import (
     JobResponse,
+    OpenSolutionRequest,
     RunSolutionRequest,
     RunSolutionResponse,
     RunSolutionsResponse,
@@ -94,3 +97,21 @@ def get_merged_results(slug: str):
     return RunSolutionsResponse(
         solutions=[RunSolutionResponse(**v) for _, v in merged.values()]
     )
+
+
+@router.post("/open")
+def open_solution_in_editor(slug: str, req: OpenSolutionRequest):
+    """Open a solution file in Cursor with the problem directory as workspace."""
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+
+    file_path = problem_path / "solutions" / req.solution_path
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=404, detail=f"Solution file not found: {req.solution_path}"
+        )
+
+    subprocess.Popen(["cursor", settings.problems_root, str(file_path)])
+    return {"ok": True}

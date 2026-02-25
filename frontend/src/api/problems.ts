@@ -139,3 +139,19 @@ export async function getMergedResults(slug: string): Promise<SolutionsRunResult
   const { data } = await client.get<SolutionsRunResult>(`/problems/${slug}/solutions/merged-results`)
   return data
 }
+
+export async function openSolutionInEditor(slug: string, solutionPath: string): Promise<void> {
+  await client.post(`/problems/${slug}/solutions/open`, { solution_path: solutionPath })
+}
+
+export async function openStatementInEditor(slug: string): Promise<void> {
+  await client.post(`/problems/${slug}/statement/open`)
+}
+
+export async function openGeneratorInEditor(slug: string, setName: string, genName: string): Promise<void> {
+  await client.post(`/problems/${slug}/tests/open-generator`, { set_name: setName, gen_name: genName })
+}
+
+export async function openTestCaseInEditor(slug: string, setName: string, testName: string): Promise<void> {
+  await client.post(`/problems/${slug}/tests/open-test`, { set_name: setName, test_name: testName })
+}

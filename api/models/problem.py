@@ -121,6 +121,20 @@ class RunSolutionRequest(BaseModel):
     test_set: str | None = None  # None = run all sets
 
 
+class OpenSolutionRequest(BaseModel):
+    solution_path: str  # relative path, e.g. "complete_ac/sol.py"
+
+
+class OpenGeneratorRequest(BaseModel):
+    set_name: str
+    gen_name: str  # filename, e.g. "gen_tests.py"
+
+
+class OpenTestCaseRequest(BaseModel):
+    set_name: str
+    test_name: str  # stem, e.g. "input1"
+
+
 class Verdict(BaseModel):
     test_case: str
     test_set: str

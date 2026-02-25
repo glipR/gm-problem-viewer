@@ -1,5 +1,5 @@
 import { Box, Button, Group, Loader, Alert, ScrollArea } from '@mantine/core'
-import { IconBrain, IconAlertTriangle } from '@tabler/icons-react'
+import { IconBrain, IconAlertTriangle, IconCode } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 import { createContext, useContext } from 'react'
 import Markdown from 'react-markdown'
@@ -7,7 +7,7 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
 import 'katex/dist/katex.min.css'
-import { getStatement } from '../../api/problems'
+import { getStatement, openStatementInEditor } from '../../api/problems'
 
 const InPreContext = createContext(false)
 
@@ -27,6 +27,14 @@ export default function StatementTab({ slug }: Props) {
   return (
     <Box p="xl">
       <Group mb="lg">
+        <Button
+          size="xs"
+          variant="light"
+          leftSection={<IconCode size={14} />}
+          onClick={() => openStatementInEditor(slug)}
+        >
+          Open in Cursor
+        </Button>
         <Button
           size="xs"
           variant="light"

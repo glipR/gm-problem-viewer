@@ -7,6 +7,7 @@ TODO: Implement all endpoints below.
 from __future__ import annotations
 import re
 import os
+import subprocess
 
 import yaml
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -26,6 +27,8 @@ from api.models.problem import (
     GenerateMultipleTestsRequest,
     GenerateTestsRequest,
     JobResponse,
+    OpenGeneratorRequest,
+    OpenTestCaseRequest,
     TestCase,
     TestContentResponse,
     TestSetConfig,
@@ -77,6 +80,38 @@ def generate_tests(slug: str, req: GenerateMultipleTestsRequest, bg: BackgroundT
     bg.add_task(run_testgen_job, problem_path, req, job_id)
 
     return JobResponse(job_ids=[job_id])
+
+
+@router.post("/open-generator")
+def open_generator_in_editor(slug: str, req: OpenGeneratorRequest):
+    """Open a test generator file in Cursor with the problems root as workspace."""
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+
+    file_path = problem_path / "data" / req.set_name / req.gen_name
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Generator not found: {req.gen_name}")
+
+    subprocess.Popen(["cursor", str(settings.problems_root), str(file_path)])
+    return {"ok": True}
+
+
+@router.post("/open-test")
+def open_test_case_in_editor(slug: str, req: OpenTestCaseRequest):
+    """Open a test case .in file in Cursor with the problems root as workspace."""
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+
+    file_path = problem_path / "data" / req.set_name / (req.test_name + ".in")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Test case not found: {req.test_name}.in")
+
+    subprocess.Popen(["cursor", str(settings.problems_root), str(file_path)])
+    return {"ok": True}
 
 
 @router.post("/", response_model=None, status_code=201)
