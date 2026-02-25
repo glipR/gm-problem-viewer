@@ -49,7 +49,7 @@ class Solution(BaseModel):
     path: str  # relative path within solutions/
     language: str | None = None  # "python" | "cpp"; inferred from file extension
     name: str
-    expectation: str | list[dict[str, str]]  # "AC" | "WA" | "TLE" or per-set list
+    expectation: str | dict[str, str]  # "AC" | "WA" | "TLE" or per-set mapping
     description: str | None = None
 
     def full_path(self, problem_path: Path):
