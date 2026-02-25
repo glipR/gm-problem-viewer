@@ -99,8 +99,8 @@ function ExpectationBadges({ expectation }: { expectation: Solution['expectation
   }
   return (
     <Group gap={4} wrap="nowrap">
-      {expectation.map((e) => {
-        const [set, verdict] = Object.entries(e)[0]
+      {Object.keys(expectation).map((set) => {
+        const verdict = expectation[set]
         return (
           <Badge key={set} size="xs" color={verdictColor(verdict)} variant="light">
             {set}: {verdict}

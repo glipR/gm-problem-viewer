@@ -17,7 +17,7 @@ export interface Solution {
   path: string
   language?: string
   name: string
-  expectation: string | Record<string, string>[]
+  expectation: string | Record<string, string>
   description?: string
 }
 

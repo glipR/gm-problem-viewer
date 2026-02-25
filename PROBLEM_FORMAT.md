@@ -133,12 +133,12 @@ expectation: AC # Should pass all tests
 expectation: WA # Should WA at least one test
 ```
 
-A list of `{set_name: verdict}` mappings gives per-test-set expectations:
+A mapping of `{set_name: verdict}` mappings gives per-test-set expectations:
 ```yaml
 expectation:
-- sample: AC
-- setA: AC
-- setB: WA
+  sample: AC
+  setA: AC
+  setB: WA
 ```
 
 Valid verdict strings: `AC`, `WA`, `TLE`.

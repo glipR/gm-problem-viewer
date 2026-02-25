@@ -1,8 +1,8 @@
 """---
 name:  WA Try linear
 expectation:
-- setA: WA
-- setB: WA
+  setA: WA
+  setB: WA
 ---
 
 Simple approach that just guesses the first q numbers

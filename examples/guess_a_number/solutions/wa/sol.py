@@ -1,8 +1,6 @@
 """---
 name:  WA Try random
-expectation:
-- setA: WA
-- setB: WA
+expectation: WA
 ---
 
 Simple approach that just guesses numbers at random.

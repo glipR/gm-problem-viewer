@@ -1,9 +1,9 @@
 """---
 name:  Set A AC
 expectation:
-- sample: AC
-- setA: AC
-- setB: WA
+  sample: AC
+  setA: AC
+  setB: WA
 ---
 
 Solution for subtask A only - that assumes we have 51 queries available.
@@ -30,7 +30,7 @@ for i in range(5):
         elif q == "HIGHER":
             continue
         elif q == "LOWER":
-            digits[i] = v-1
+            digits[i] = v - 1
             break
         else:
             sys.exit(0)
