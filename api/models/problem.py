@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 class TestSetConfig(BaseModel):
-    name: str
+    name: str | None = None
     description: str | None = None
     points: float = 0.0
     marking_style: str = "all_or_nothing"  # "progressive" | "all_or_nothing"
@@ -54,6 +54,21 @@ class Solution(BaseModel):
 
     def full_path(self, problem_path: Path):
         return problem_path / "solutions" / self.path
+
+    def expectation_overall(self) -> str:
+        if isinstance(self.expectation, str):
+            return self.expectation
+        elif isinstance(self.expectation, dict):
+            non_ac = [s for s in self.expectation.values() if s != "AC"]
+            if non_ac:
+                return non_ac[0]
+            return "AC"
+
+    def expectation_for_set(self, test_set: TestSet) -> str | None:
+        if isinstance(self.expectation, str):
+            return self.expectation
+        elif isinstance(self.expectation, dict):
+            return self.expectation.get(test_set.name, None)
 
 
 class Validator(BaseModel):

@@ -29,6 +29,7 @@ class JobType:
     RUN_VALIDATORS = "run_validators"
     RUN_SOLUTION = "run_solution"
     EXPORT = "export"
+    REVIEW_DETERMINISTIC = "review-deterministic"
 
 
 # --- Internal helpers ---
