@@ -148,23 +148,27 @@ export default function StatementTab({ slug }: Props) {
                     {children}
                   </table>
                 ),
-                th: ({ children }) => (
+                th: ({ children, ...props }) => (
                   <th
+                    {...props}
                     style={{
                       border: '1px solid var(--mantine-color-gray-3)',
                       padding: '4px 10px',
                       background: 'var(--mantine-color-gray-1)',
+                      ...(props.style ?? {})
                     }}
                   >
                     {children}
                   </th>
                 ),
-                td: ({ children }) => (
+                td: ({ children, ...props }) => (
                   <td
+                    {...props}
                     style={{
                       border: '1px solid var(--mantine-color-gray-3)',
                       padding: '4px 10px',
                       fontFamily: 'monospace',
+                      ...(props.style ?? {})
                     }}
                   >
                     {children}

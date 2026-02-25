@@ -9,7 +9,10 @@ import subprocess
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from api.collection.statement import get_statement as col_get_statement
+from api.collection.statement import (
+    get_statement as col_get_statement,
+    compile_statement,
+)
 from api.config import get_settings
 from api.models.problem import JobResponse, StatementResponse
 
@@ -24,9 +27,11 @@ def get_statement(slug: str):
     if not problem_path.exists():
         raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
     content = col_get_statement(problem_path)
-    if content is None:
+    compiled_content = compile_statement(problem_path)
+    final_content = compiled_content or content
+    if final_content is None:
         raise HTTPException(status_code=404, detail="statement.md not found")
-    return StatementResponse(raw=content)
+    return StatementResponse(raw=final_content)
 
 
 @router.post("/statement/open")
