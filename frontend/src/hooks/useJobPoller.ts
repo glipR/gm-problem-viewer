@@ -11,7 +11,7 @@ const TERMINAL = new Set(['done', 'failed'])
  */
 export function useJobPoller(
   jobId: string | null,
-  { onDone }: { onDone?: (job: JobStatus) => void } = {},
+  { onDone, onPoll }: { onDone?: (job: JobStatus) => void, onPoll?: () => void } = {},
 ) {
   // Keep onDone stable so the effect doesn't re-fire if the caller recreates it
   const onDoneRef = useRef(onDone)
@@ -19,7 +19,11 @@ export function useJobPoller(
 
   const query = useQuery({
     queryKey: ['job', jobId],
-    queryFn: () => getJob(jobId!),
+    queryFn: () => {
+      const res = getJob(jobId!)
+      onPoll?.();
+      return res;
+    },
     enabled: !!jobId,
     refetchInterval: (q) => {
       const status = q.state.data?.status

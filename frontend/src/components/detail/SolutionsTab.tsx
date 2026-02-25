@@ -21,7 +21,6 @@ import type {
   Problem,
   Solution,
   SolutionRunResult,
-  SolutionsRunResult,
   Verdict,
 } from '../../types/problem'
 import { runSolutions, getMergedResults } from '../../api/problems'
@@ -285,21 +284,26 @@ export default function SolutionsTab({ problem }: Props) {
 
   // Poll the active job; on completion clear the live overlay and refresh merged results
   const { data: jobData } = useJobPoller(activeRun?.jobId ?? null, {
-    onDone: (_job: JobStatus) => {
+    onDone: (job: JobStatus) => {
+      if (job.status === "done") {
+        notifications.show({ message: 'Run complete', color: 'green' })
+      } else {
+        notifications.show({ message: 'Failed to run solutions', color: 'red' })
+      }
       setActiveRun(null)
       qc.invalidateQueries({ queryKey: ['solution-merged-results', problem.slug] })
     },
+    onPoll: () => {
+      qc.invalidateQueries({ queryKey: ['solution-merged-results', problem.slug] })
+    }
   })
 
   const jobStatus = jobData?.status
   const jobIsRunning = jobStatus === 'running' || jobStatus === 'pending'
 
-  const liveResult = jobData?.result as SolutionsRunResult | null | undefined
-
   // Live job data overlays the merged base while a job is active
   function getResult(path: string): SolutionRunResult | null {
     return (
-      liveResult?.solutions.find((s) => s.solution_path === path) ??
       mergedResults?.solutions.find((s) => s.solution_path === path) ??
       null
     )
@@ -307,7 +311,7 @@ export default function SolutionsTab({ problem }: Props) {
 
   function isSolutionRunning(path: string): boolean {
     if (!jobIsRunning) return false
-    return activeRun?.paths.includes(path) ?? true
+    return (activeRun?.paths.includes(path) && mergedResults?.solutions.find(s => s.solution_path === path)?.overall === 'PD') ?? true
   }
 
   function handleRunStarted(jobId: string, paths: string[]) {
