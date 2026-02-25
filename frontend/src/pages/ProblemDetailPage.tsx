@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Box,
   Group,
@@ -26,6 +27,7 @@ import FacetIcons from '../components/kanban/FacetIcons'
 import StatementTab from '../components/detail/StatementTab'
 import SolutionsTab from '../components/detail/SolutionsTab'
 import TestsTab from '../components/detail/TestsTab'
+import { ProgressOverlay, JobStepType } from '../components/detail/ProgressOverlay'
 
 interface Props {
   slug: string
@@ -40,6 +42,8 @@ const STATE_COLORS: Record<string, string> = {
 }
 
 export default function ProblemDetailPage({ slug, onBack }: Props) {
+  const [runJobIds, setRunJobIds] = useState<[string, string, string] | null>(null)
+
   const { data: problem, isLoading, isError } = useQuery({
     queryKey: ['problem', slug],
     queryFn: () => getProblem(slug),
@@ -47,7 +51,9 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
 
   const { mutate: run, isPending: runPending } = useMutation({
     mutationFn: () => runProblem(slug),
-    onSuccess: () => notifications.show({ message: 'Run pipeline started', color: 'blue' }),
+    onSuccess: (data) => {
+      setRunJobIds(data.job_ids as [string, string, string])
+    },
     onError: () => notifications.show({ message: 'Run not yet implemented', color: 'orange' }),
   })
 
@@ -241,6 +247,19 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
           <TestsTab problem={problem} />
         </Tabs.Panel>
       </Tabs>
+
+      {runJobIds && (
+        <ProgressOverlay
+          key={runJobIds.join(',')}
+          steps={[
+            { jobId: runJobIds[0], type: JobStepType.GENERATE_TESTS },
+            { jobId: runJobIds[1], type: JobStepType.RUN_VALIDATORS },
+            { jobId: runJobIds[2], type: JobStepType.RUN_SOLUTION },
+          ]}
+          slug={slug}
+          onDone={() => setRunJobIds(null)}
+        />
+      )}
     </Box>
   )
 }

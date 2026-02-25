@@ -310,8 +310,7 @@ export default function SolutionsTab({ problem }: Props) {
   }
 
   function isSolutionRunning(path: string): boolean {
-    if (!jobIsRunning) return false
-    return (activeRun?.paths.includes(path) && mergedResults?.solutions.find(s => s.solution_path === path)?.overall === 'PD') ?? true
+    return mergedResults?.solutions.find(s => s.solution_path === path)?.overall === 'PD'
   }
 
   function handleRunStarted(jobId: string, paths: string[]) {
