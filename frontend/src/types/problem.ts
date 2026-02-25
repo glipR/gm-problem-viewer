@@ -104,3 +104,22 @@ export interface CheckResult {
   passed: boolean
   detail: string
 }
+
+export interface PhaseResult {
+  num_tests: number
+  passed: number
+  issues: string[]
+}
+
+export interface CategoryResult {
+  num_tests: number
+  passed: number
+  issues: string[]
+  color: 'green' | 'yellow' | 'red'
+}
+
+export interface ReviewJobResult {
+  phase1?: PhaseResult
+  phase2?: PhaseResult
+  by_category?: Record<string, CategoryResult>
+}

@@ -14,6 +14,7 @@ export enum JobStepType {
   GENERATE_TESTS = 'generate_tests',
   RUN_VALIDATORS = 'run_validators',
   RUN_SOLUTION = 'run_solution',
+  REVIEW_DETERMINISTIC = 'review-deterministic',
 }
 
 interface StepConfig {
@@ -34,6 +35,10 @@ const STEP_CONFIG: Record<JobStepType, StepConfig> = {
   [JobStepType.RUN_SOLUTION]: {
     label: 'Running solutions',
     invalidates: (slug) => [['solution-merged-results', slug]],
+  },
+  [JobStepType.REVIEW_DETERMINISTIC]: {
+    label: 'Running checks',
+    invalidates: (slug) => [['latest-review-job', slug]],
   },
 }
 

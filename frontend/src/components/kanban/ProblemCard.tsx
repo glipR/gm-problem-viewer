@@ -4,6 +4,7 @@ import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import type { Problem } from '../../types/problem'
 import FacetIcons from './FacetIcons'
+import { useReviewProgress } from '../../hooks/useReviewProgress'
 
 interface Props {
   problem: Problem
@@ -14,6 +15,7 @@ export default function ProblemCard({ problem, onSelect }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: problem.slug,
   })
+  const { progress, color, issues, byCategory } = useReviewProgress(problem.slug)
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -59,13 +61,22 @@ export default function ProblemCard({ problem, onSelect }: Props) {
         </Text>
 
         {/* Progress bar */}
-        <Tooltip label="Run Review to see check progress" withArrow>
-          <Progress value={0} size="xs" color="green" />
+        <Tooltip
+          label={
+            issues.length > 0
+              ? <Stack gap={1}>{issues.map((issue, i) => <Text key={i} size="xs">• {issue}</Text>)}</Stack>
+              : progress > 0 ? 'All checks passing' : 'Run Review to see check progress'
+          }
+          withArrow
+          multiline
+          maw={280}
+        >
+          <Progress value={progress} size="xs" color={color} />
         </Tooltip>
 
         {/* Bottom row: facet icons + export */}
         <Group justify="space-between" align="center">
-          <FacetIcons problem={problem} />
+          <FacetIcons problem={problem} byCategory={byCategory} />
           <Tooltip label="Export">
             <ActionIcon
               size="sm"

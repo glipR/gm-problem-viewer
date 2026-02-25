@@ -1,6 +1,7 @@
 import { Badge, Card, Group, Progress, Stack, Text, Tooltip } from '@mantine/core'
 import type { Problem } from '../../types/problem'
 import FacetIcons from './FacetIcons'
+import { useReviewProgress } from '../../hooks/useReviewProgress'
 
 const STATE_COLORS: Record<string, string> = {
   draft: 'gray',
@@ -23,6 +24,8 @@ const staticOverflow = {
 }
 
 export default function StaticProblemCard({ problem, onSelect }: Props) {
+  const { progress, color, issues, byCategory } = useReviewProgress(problem.slug)
+
   return (
     <Card
       withBorder
@@ -62,12 +65,21 @@ export default function StaticProblemCard({ problem, onSelect }: Props) {
         </Text>
 
         {/* Progress bar */}
-        <Tooltip label="Run Review to see check progress" withArrow>
-          <Progress value={0} size="xs" color="green" />
+        <Tooltip
+          label={
+            issues.length > 0
+              ? <Stack gap={1}>{issues.map((issue, i) => <Text key={i} size="xs">• {issue}</Text>)}</Stack>
+              : progress > 0 ? 'All checks passing' : 'Run Review to see check progress'
+          }
+          withArrow
+          multiline
+          maw={280}
+        >
+          <Progress value={progress} size="xs" color={color} />
         </Tooltip>
 
         {/* Facet icons */}
-        <FacetIcons problem={problem} />
+        <FacetIcons problem={problem} byCategory={byCategory} />
       </Stack>
     </Card>
   )

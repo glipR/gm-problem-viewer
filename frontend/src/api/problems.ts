@@ -95,8 +95,13 @@ export async function runProblem(slug: string): Promise<{ job_ids: string[] }> {
   return data
 }
 
-export async function reviewProblem(slug: string): Promise<{ checks: CheckResult[] }> {
-  const { data } = await client.post<{ checks: CheckResult[] }>(`/problems/${slug}/review`)
+export async function reviewProblem(slug: string): Promise<{ job_ids: string[] }> {
+  const { data } = await client.post<{ job_ids: string[] }>(`/problems/${slug}/review`)
+  return data
+}
+
+export async function getLatestReviewJob(slug: string): Promise<JobStatus | null> {
+  const { data } = await client.get<JobStatus | null>(`/problems/${slug}/review/latest`)
   return data
 }
 

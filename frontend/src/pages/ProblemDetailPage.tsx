@@ -28,6 +28,7 @@ import StatementTab from '../components/detail/StatementTab'
 import SolutionsTab from '../components/detail/SolutionsTab'
 import TestsTab from '../components/detail/TestsTab'
 import { ProgressOverlay, JobStepType } from '../components/detail/ProgressOverlay'
+import { useReviewProgress } from '../hooks/useReviewProgress'
 
 interface Props {
   slug: string
@@ -43,6 +44,8 @@ const STATE_COLORS: Record<string, string> = {
 
 export default function ProblemDetailPage({ slug, onBack }: Props) {
   const [runJobIds, setRunJobIds] = useState<[string, string, string] | null>(null)
+  const [reviewJobId, setReviewJobId] = useState<string | null>(null)
+  const { progress: reviewProgress, color: reviewColor, issues: reviewIssues, byCategory } = useReviewProgress(slug)
 
   const { data: problem, isLoading, isError } = useQuery({
     queryKey: ['problem', slug],
@@ -59,8 +62,8 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
 
   const { mutate: review, isPending: reviewPending } = useMutation({
     mutationFn: () => reviewProblem(slug),
-    onSuccess: () => notifications.show({ message: 'Review complete', color: 'green' }),
-    onError: () => notifications.show({ message: 'Review not yet implemented', color: 'orange' }),
+    onSuccess: (data) => setReviewJobId(data.job_ids[0]),
+    onError: () => notifications.show({ message: 'Review failed to start', color: 'red' }),
   })
 
   const { mutate: reviewAI, isPending: aiPending } = useMutation({
@@ -154,7 +157,7 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
           {/* Facet icons + action buttons */}
           <Group justify="space-between" align="center">
             <Group gap="md">
-              <FacetIcons problem={problem} />
+              <FacetIcons problem={problem} byCategory={byCategory} />
             </Group>
 
             <Group gap="xs">
@@ -200,11 +203,17 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
 
         {/* Progress bar — this IS the bottom border of the header */}
         <Tooltip
-          label="Run Review to see which deterministic checks are passing"
+          label={
+            reviewIssues.length > 0
+              ? <Stack gap={2}>{reviewIssues.map((issue, i) => <Text key={i} size="xs">• {issue}</Text>)}</Stack>
+              : reviewProgress > 0 ? 'All checks passing' : 'Run Review to see which deterministic checks are passing'
+          }
           withArrow
           position="bottom"
+          multiline
+          maw={320}
         >
-          <Progress value={0} size="sm" color="green" radius={0} />
+          <Progress value={reviewProgress} size="sm" color={reviewColor} radius={0} />
         </Tooltip>
       </Box>
 
@@ -258,6 +267,15 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
           ]}
           slug={slug}
           onDone={() => setRunJobIds(null)}
+        />
+      )}
+
+      {reviewJobId && (
+        <ProgressOverlay
+          key={reviewJobId}
+          steps={[{ jobId: reviewJobId, type: JobStepType.REVIEW_DETERMINISTIC }]}
+          slug={slug}
+          onDone={() => setReviewJobId(null)}
         />
       )}
     </Box>
