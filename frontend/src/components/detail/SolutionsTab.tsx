@@ -13,7 +13,7 @@ import {
   Loader,
   Stack,
 } from '@mantine/core'
-import { IconPlayerPlay, IconAlertTriangle } from '@tabler/icons-react'
+import { IconPlayerPlay, IconAlertTriangle, IconBrandPython, IconBrandCpp, IconQuestionMark } from '@tabler/icons-react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
 import type {
@@ -39,6 +39,14 @@ interface ActiveRun {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+function languageIcon(language: string) {
+  switch(language) {
+    case 'python': return <IconBrandPython size={24} color='#4B8BBE'/>
+    case 'cpp': return <IconBrandCpp size={24} color='#F77F00'/>
+    default: return <IconQuestionMark size={24} color='#444444'/>
+  }
+}
 
 function verdictColor(verdict: string): string {
   switch (verdict.toUpperCase()) {
@@ -199,18 +207,14 @@ function SolutionItem({
       notifications.show({ message: 'Failed to start solution run', color: 'red' }),
   })
 
-  const langColor = solution.language === 'cpp' ? 'orange' : 'blue'
-
   return (
     <Accordion.Item value={solution.path}>
       <Accordion.Control>
         <Group justify="space-between" wrap="nowrap" pr="xs">
           <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-            {solution.language && (
-              <Badge size="xs" variant="dot" color={langColor} style={{ flexShrink: 0 }}>
-                {solution.language}
-              </Badge>
-            )}
+            <Group style={{flexShrink: 0}}>
+              {solution.language && <>{languageIcon(solution.language)}</>}
+            </Group>
             <Text size="sm" fw={500} truncate style={{flexShrink: 0}}>
               {solution.name}
             </Text>
