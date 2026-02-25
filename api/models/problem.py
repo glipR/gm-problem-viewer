@@ -40,6 +40,7 @@ class TestCase(BaseModel):
     name: str
     set_name: str
     description: str | None = None
+    generated_by: str | None = None
 
     def full_path(self, problem_path: Path):
         return problem_path / "data" / self.set_name / f"{self.name}.in"
@@ -125,7 +126,10 @@ class TestGenerator(BaseModel):
     description: str = ""  # Sourced from docstring; empty if none present
 
     def full_path(self, problem_path: Path):
-        return problem_path / "data" / self.test_set / self.name
+        return problem_path / "data" / self.relative_path()
+
+    def relative_path(self):
+        return Path(self.test_set) / self.name
 
 
 # --- Request / Response models for API operations ---

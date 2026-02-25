@@ -1,16 +1,12 @@
 import random
-from pathlib import Path
-
-rand_count = 0
+from testlibpy import write_test_case
 
 random.seed(9823718273)
 
-def write_random():
-    global rand_count
-    rand_count += 1
 
-    with open(Path(__file__).parent / f"rand-{rand_count}.in", "w") as f:
-        f.write(f"{random.randint(1, 100000)} 15")
+def write_random():
+    write_test_case(f"{random.randint(1, 100000)} 15", rpt_name="rand-")
+
 
 for _ in range(10):
     write_random()

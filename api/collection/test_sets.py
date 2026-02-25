@@ -57,15 +57,20 @@ def get_test_sets(problem_path: Path) -> list[TestSet]:
     for set_dir in sorted(
         (d for d in data_dir.iterdir() if d.is_dir()), key=_natural_key
     ):
-        test_sets.append(
-            TestSet(
-                name=set_dir.name,
-                config=_load_set_config(set_dir),
-                test_cases=_get_test_cases(set_dir),
-            )
-        )
+        test_sets.append(get_test_set(problem_path, set_dir.name))
 
     return test_sets
+
+
+def get_test_set(problem_path: Path, test_set: str) -> TestSet:
+    set_dir = problem_path / "data" / test_set
+    if not set_dir.exists():
+        raise ValueError(f"Set {test_set} does not exist.")
+    return TestSet(
+        name=test_set,
+        config=_load_set_config(set_dir),
+        test_cases=_get_test_cases(set_dir),
+    )
 
 
 def get_test_content(
@@ -83,6 +88,17 @@ def get_test_content(
         if len(raw) == 1024:
             content += "..."
     return TestContentResponse(content=content)
+
+
+def delete_test_case(problem_path: Path, set_name: str, test_name: str):
+    """
+    Delete test content
+    """
+    f1 = TestCase(name=test_name, set_name=set_name).full_path(problem_path)
+    f2 = f1.with_suffix(".out")
+    f3 = f1.with_suffix(".yaml")
+    for fn in [f1, f2, f3]:
+        fn.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
