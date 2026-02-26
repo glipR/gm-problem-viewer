@@ -35,7 +35,7 @@ def run_python_file(
     modified_env = curr_env | {"PYTHONPATH": python_path} | env_kwargs
 
     result = subprocess.run(
-        ["pypy3", str(file_path.resolve())],
+        ["python", str(file_path.resolve())],
         text=True,
         capture_output=True,
         timeout=timeout_sec,
