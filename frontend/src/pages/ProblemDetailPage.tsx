@@ -22,12 +22,14 @@ import {
   IconUpload,
 } from '@tabler/icons-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getProblem, runProblem, reviewProblem, reviewProblemAI, getLatestGenerateJob, getMergedResults, getLatestValidatorJob } from '../api/problems'
+import { getProblem, runProblem, reviewProblem, reviewProblemAI, getLatestGenerateJob, getMergedResults, getLatestValidatorJob, getTodo } from '../api/problems'
 import FacetIcons from '../components/kanban/FacetIcons'
 import StatementTab from '../components/detail/StatementTab'
 import SolutionsTab from '../components/detail/SolutionsTab'
 import TestsTab from '../components/detail/TestsTab'
 import ValidatorsTab from '../components/detail/ValidatorsTab'
+import TodoTab from '../components/detail/TodoTab'
+import EditorialTab from '../components/detail/EditorialTab'
 import { ProgressOverlay, JobStepType } from '../components/detail/ProgressOverlay'
 import { useReviewProgress } from '../hooks/useReviewProgress'
 import { useJobPoller } from '../hooks/useJobPoller'
@@ -105,6 +107,15 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
     queryKey: ['solution-merged-results', slug],
     queryFn: () => getMergedResults(slug),
   })
+
+  const { data: todoData } = useQuery({
+    queryKey: ['todo', slug],
+    queryFn: () => getTodo(slug),
+  })
+
+  const todoCount = todoData?.raw
+    ? todoData.raw.split('\n').filter((line) => /^\s*[-*]\s/.test(line)).length
+    : 0
 
   // Active run stuff
   // Poll the active job; on completion clear the live overlay and refresh merged results
@@ -318,6 +329,17 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
               )}
             </Group>
           </Tabs.Tab>
+          <Tabs.Tab value="todo">
+            <Group gap={4}>
+              TODO
+              {todoCount > 0 && (
+                <Text component="span" size="xs" c="dimmed" ml={4}>
+                  ({todoCount})
+                </Text>
+              )}
+            </Group>
+          </Tabs.Tab>
+          <Tabs.Tab value="editorial">Editorial</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="statement" style={{ flex: 1 }}>
@@ -334,6 +356,14 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
 
         <Tabs.Panel value="solutions" style={{ flex: 1 }}>
           <SolutionsTab problem={problem} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="todo" style={{ flex: 1 }}>
+          <TodoTab slug={slug} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="editorial" style={{ flex: 1 }}>
+          <EditorialTab slug={slug} />
         </Tabs.Panel>
 
       </Tabs>

@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.jobs import purge_stale_jobs
-from api.routes import problems, solutions, validators, tests, export, jobs, statement, review
+from api.routes import problems, solutions, validators, tests, export, jobs, statement, review, todo, editorial
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,8 @@ app.include_router(tests.router)
 app.include_router(export.router)
 app.include_router(statement.router)
 app.include_router(review.router)
+app.include_router(todo.router)
+app.include_router(editorial.router)
 app.include_router(jobs.router)
 
 

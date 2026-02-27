@@ -181,3 +181,21 @@ export async function openGeneratorInEditor(slug: string, setName: string, genNa
 export async function openTestCaseInEditor(slug: string, setName: string, testName: string): Promise<void> {
   await client.post(`/problems/${slug}/tests/open-test`, { set_name: setName, test_name: testName })
 }
+
+export async function getTodo(slug: string): Promise<{ raw: string | null }> {
+  const { data } = await client.get<{ raw: string | null }>(`/problems/${slug}/todo/`)
+  return data
+}
+
+export async function updateTodo(slug: string, content: string): Promise<void> {
+  await client.put(`/problems/${slug}/todo/`, { content })
+}
+
+export async function getEditorial(slug: string): Promise<{ raw: string }> {
+  const { data } = await client.get<{ raw: string }>(`/problems/${slug}/editorial/`)
+  return data
+}
+
+export async function openEditorialInEditor(slug: string): Promise<void> {
+  await client.post(`/problems/${slug}/editorial/open`)
+}
