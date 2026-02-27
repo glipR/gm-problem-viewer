@@ -8,9 +8,10 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from api.config import get_settings
 from api.execution.run_validators import run_validators_job
-from api.jobs import JobType, create_job
+from api.jobs import JobType, create_job, get_latest_job_id, read_job
 from api.models.problem import (
     JobResponse,
+    JobStatusResponse,
     RunValidatorsRequest,
 )
 
@@ -36,3 +37,22 @@ def run_validators(slug: str, req: RunValidatorsRequest, bg: BackgroundTasks):
     bg.add_task(run_validators_job, problem_path, req, job_id)
 
     return JobResponse(job_ids=[job_id])
+
+
+@router.get("/latest", response_model=JobStatusResponse | None)
+def get_latest_validate_job(slug: str):
+    """
+    Return the most recent /run job for this problem, or null if none exists.
+    """
+    job_id = get_latest_job_id(slug, JobType.RUN_VALIDATORS)
+    if job_id is None:
+        return None
+    data = read_job(job_id)
+    if data is None:
+        return None
+    return JobStatusResponse(
+        id=data["id"],
+        status=data["status"],
+        result=data.get("result"),
+        error=data.get("error"),
+    )

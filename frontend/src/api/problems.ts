@@ -62,6 +62,11 @@ export async function generateAllTests(
   return data
 }
 
+export async function getLatestGenerateJob(slug: string): Promise<JobStatus | null> {
+  const { data } = await client.get<JobStatus | null>(`/problems/${slug}/tests/generate/latest`)
+  return data
+}
+
 export async function createTestSet(
   slug: string,
   req: { name: string; description?: string; points?: number; marking_style?: string },
@@ -107,6 +112,11 @@ export async function getLatestReviewJob(slug: string): Promise<JobStatus | null
 
 export async function reviewProblemAI(slug: string): Promise<{ job_ids: string[] }> {
   const { data } = await client.post<{ job_ids: string[] }>(`/problems/${slug}/review/ai`)
+  return data
+}
+
+export async function getLatestValidatorJob(slug: string): Promise<JobStatus | null> {
+  const { data } = await client.get<JobStatus | null>(`/problems/${slug}/validators/latest`)
   return data
 }
 

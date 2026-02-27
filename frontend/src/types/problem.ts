@@ -97,6 +97,7 @@ export interface SolutionRunResult {
 
 export interface SolutionsRunResult {
   solutions: SolutionRunResult[]
+  status?: string
 }
 
 export interface CheckResult {

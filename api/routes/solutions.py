@@ -72,12 +72,16 @@ def get_merged_results(slug: str):
     merged: dict[str, tuple[str, dict]] = {}
 
     # Seed from the latest group run
+    status = None
     group_id = get_latest_job_id(slug, JobType.RUN_SOLUTION)
     if group_id:
         data = read_job(group_id)
+        status = data.get("status")
         if data and data.get("result"):
             for sol in data["result"].get("solutions", []):
                 merged[sol["solution_path"]] = (data["updated_at"], sol)
+
+    non_terminal_status = ["done", None]
 
     # Overlay individual runs, preferring whichever is more recent
     for key in list_individual_solution_keys(slug):
@@ -93,9 +97,15 @@ def get_merged_results(slug: str):
             existing = merged.get(path)
             if not existing or data["updated_at"] > existing[0]:
                 merged[path] = (data["updated_at"], sol)
+                if (
+                    status in non_terminal_status
+                    and data.get("status") not in non_terminal_status
+                ):
+                    status = data.get("status")
 
     return RunSolutionsResponse(
-        solutions=[RunSolutionResponse(**v) for _, v in merged.values()]
+        solutions=[RunSolutionResponse(**v) for _, v in merged.values()],
+        status=status,
     )
 
 

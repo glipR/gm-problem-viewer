@@ -45,7 +45,7 @@ def run_solutions_job(
         solutions = get_solutions(problem_path)
         test_sets = get_test_sets(problem_path)
 
-        results = RunSolutionsResponse(solutions=[])
+        results = RunSolutionsResponse(solutions=[], status=None)
         last_flush = time.monotonic()
 
         for solution in solutions:

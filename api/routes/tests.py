@@ -19,7 +19,7 @@ from api.collection.test_sets import (
 )
 from api.config import get_settings
 from api.execution.run_testgen import run_testgen_job
-from api.jobs import JobType, create_job
+from api.jobs import JobType, create_job, get_latest_job_id, read_job
 from api.models.problem import (
     CreateTestCaseRequest,
     CreateTestCaseResponse,
@@ -27,6 +27,7 @@ from api.models.problem import (
     GenerateMultipleTestsRequest,
     GenerateTestsRequest,
     JobResponse,
+    JobStatusResponse,
     OpenGeneratorRequest,
     OpenTestCaseRequest,
     TestCase,
@@ -82,6 +83,25 @@ def generate_tests(slug: str, req: GenerateMultipleTestsRequest, bg: BackgroundT
     return JobResponse(job_ids=[job_id])
 
 
+@router.get("/generate/latest", response_model=JobStatusResponse | None)
+def get_latest_generate_job(slug: str):
+    """
+    Return the most recent /generate job for this problem, or null if none exists.
+    """
+    job_id = get_latest_job_id(slug, JobType.GENERATE_TESTS)
+    if job_id is None:
+        return None
+    data = read_job(job_id)
+    if data is None:
+        return None
+    return JobStatusResponse(
+        id=data["id"],
+        status=data["status"],
+        result=data.get("result"),
+        error=data.get("error"),
+    )
+
+
 @router.post("/open-generator")
 def open_generator_in_editor(slug: str, req: OpenGeneratorRequest):
     """Open a test generator file in Cursor with the problems root as workspace."""
@@ -92,7 +112,9 @@ def open_generator_in_editor(slug: str, req: OpenGeneratorRequest):
 
     file_path = problem_path / "data" / req.set_name / req.gen_name
     if not file_path.exists():
-        raise HTTPException(status_code=404, detail=f"Generator not found: {req.gen_name}")
+        raise HTTPException(
+            status_code=404, detail=f"Generator not found: {req.gen_name}"
+        )
 
     subprocess.Popen(["cursor", str(settings.problems_root), str(file_path)])
     return {"ok": True}
@@ -108,7 +130,9 @@ def open_test_case_in_editor(slug: str, req: OpenTestCaseRequest):
 
     file_path = problem_path / "data" / req.set_name / (req.test_name + ".in")
     if not file_path.exists():
-        raise HTTPException(status_code=404, detail=f"Test case not found: {req.test_name}.in")
+        raise HTTPException(
+            status_code=404, detail=f"Test case not found: {req.test_name}.in"
+        )
 
     subprocess.Popen(["cursor", str(settings.problems_root), str(file_path)])
     return {"ok": True}

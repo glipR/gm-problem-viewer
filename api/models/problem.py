@@ -170,6 +170,7 @@ class RunSolutionResponse(BaseModel):
 
 class RunSolutionsResponse(BaseModel):
     solutions: list[RunSolutionResponse]
+    status: str | None
 
 
 class RunValidatorsRequest(BaseModel):
