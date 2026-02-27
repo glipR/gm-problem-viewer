@@ -120,6 +120,17 @@ export async function getLatestValidatorJob(slug: string): Promise<JobStatus | n
   return data
 }
 
+export async function runValidators(
+  slug: string,
+  req: { test_set?: string | null } = {},
+): Promise<{ job_ids: string[] }> {
+  const { data } = await client.post<{ job_ids: string[] }>(
+    `/problems/${slug}/validators/run`,
+    req,
+  )
+  return data
+}
+
 /** Request body for POST /problems/{slug}/solutions/run — matches RunSolutionRequest in API */
 export interface RunSolutionRequest {
   solution_paths: string[]

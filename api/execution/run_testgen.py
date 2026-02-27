@@ -28,6 +28,8 @@ def run_testgen_job(
 
         results = []
 
+        any_failed = False
+
         for generator in generators:
             if any(
                 r.test_set == generator.test_set and r.generator_name == generator.name
@@ -58,6 +60,8 @@ def run_testgen_job(
                     results[-1]["status"] = "FAILED"
                     results[-1]["error"] = traceback.format_exc()
 
+                    any_failed = True
+
                 update_job(
                     job_id,
                     result=results,
@@ -65,7 +69,7 @@ def run_testgen_job(
 
         update_job(
             job_id,
-            status="done",
+            status="failed" if any_failed else "done",
             result=results,
         )
 

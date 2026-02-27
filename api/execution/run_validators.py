@@ -39,15 +39,19 @@ def run_validators_job(
         results: list[ValidatorResult] = []
         last_flush = time.monotonic()
 
+        any_not_passed = False
+
         for validator in validators.input:
             for test_set in test_sets:
-                if filter_list_matches_test_set(validator.checks, test_set) and (
-                    (not req.test_set) or req.test_set == test_set
+                if filter_list_matches_test_set(validator.checks, test_set.name) and (
+                    (not req.test_set) or req.test_set == test_set.name
                 ):
                     for test_case in test_set.test_cases:
                         results.append(
                             run_input_validator(problem_path, validator, test_case)
                         )
+                        if not results[-1].passed:
+                            any_not_passed = True
 
                         now = time.monotonic()
                         if now - last_flush >= _FLUSH_INTERVAL:
@@ -59,7 +63,7 @@ def run_validators_job(
 
         update_job(
             job_id,
-            status="done",
+            status="failed" if any_not_passed else "done",
             result={"results": [r.model_dump() for r in results]},
         )
 

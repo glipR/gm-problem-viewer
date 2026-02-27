@@ -27,6 +27,7 @@ import FacetIcons from '../components/kanban/FacetIcons'
 import StatementTab from '../components/detail/StatementTab'
 import SolutionsTab from '../components/detail/SolutionsTab'
 import TestsTab from '../components/detail/TestsTab'
+import ValidatorsTab from '../components/detail/ValidatorsTab'
 import { ProgressOverlay, JobStepType } from '../components/detail/ProgressOverlay'
 import { useReviewProgress } from '../hooks/useReviewProgress'
 import { useJobPoller } from '../hooks/useJobPoller'
@@ -284,17 +285,6 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
       >
         <Tabs.List px="xl" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}>
           <Tabs.Tab value="statement">Statement</Tabs.Tab>
-          <Tabs.Tab value="solutions">
-            <Group gap={4}>
-              <Badge circle size="12" color={solutionRun?.status ? STATUS_COLORS[solutionRun?.status] ?? 'gray' : 'gray'}></Badge>
-              Solutions
-              {problem.solutions.length > 0 && (
-                <Text component="span" size="xs" c="dimmed" ml={4}>
-                  ({problem.solutions.length})
-                </Text>
-              )}
-            </Group>
-          </Tabs.Tab>
           <Tabs.Tab value="tests">
             <Group gap={4}>
               <Badge circle size="12" color={testRun?.status ? STATUS_COLORS[testRun?.status] ?? 'gray' : 'gray'}></Badge>
@@ -306,19 +296,46 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
               )}
             </Group>
           </Tabs.Tab>
+          <Tabs.Tab value="validators">
+            <Group gap={4}>
+              <Badge circle size="12" color={validatorRun?.status ? STATUS_COLORS[validatorRun?.status] ?? 'gray' : 'gray'}></Badge>
+              Validators
+              {problem.validators.input.length > 0 && (
+                <Text component="span" size="xs" c="dimmed" ml={4}>
+                  ({problem.validators.input.length})
+                </Text>
+              )}
+            </Group>
+          </Tabs.Tab>
+          <Tabs.Tab value="solutions">
+            <Group gap={4}>
+              <Badge circle size="12" color={solutionRun?.status ? STATUS_COLORS[solutionRun?.status] ?? 'gray' : 'gray'}></Badge>
+              Solutions
+              {problem.solutions.length > 0 && (
+                <Text component="span" size="xs" c="dimmed" ml={4}>
+                  ({problem.solutions.length})
+                </Text>
+              )}
+            </Group>
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="statement" style={{ flex: 1 }}>
           <StatementTab slug={slug} />
         </Tabs.Panel>
 
+        <Tabs.Panel value="tests" style={{ flex: 1 }}>
+          <TestsTab problem={problem} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="validators" style={{ flex: 1 }}>
+          <ValidatorsTab problem={problem} />
+        </Tabs.Panel>
+
         <Tabs.Panel value="solutions" style={{ flex: 1 }}>
           <SolutionsTab problem={problem} />
         </Tabs.Panel>
 
-        <Tabs.Panel value="tests" style={{ flex: 1 }}>
-          <TestsTab problem={problem} />
-        </Tabs.Panel>
       </Tabs>
 
       {runJobIds && (

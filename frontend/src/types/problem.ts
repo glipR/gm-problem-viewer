@@ -100,6 +100,18 @@ export interface SolutionsRunResult {
   status?: string
 }
 
+export interface ValidatorResult {
+  validator: string
+  test_case: string
+  test_set: string
+  passed: boolean
+  error: string
+}
+
+export interface ValidatorsRunResult {
+  results: ValidatorResult[]
+}
+
 export interface CheckResult {
   name: string
   passed: boolean
