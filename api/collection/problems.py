@@ -32,7 +32,8 @@ def list_problems(problems_dir: Path) -> list[Problem]:
             config = ProblemConfig(
                 **yaml.safe_load(config_path.read_text(encoding="utf-8"))
             )
-        except Exception:
+        except Exception as e:
+            print(e)
             continue
         problems.append(
             Problem(
