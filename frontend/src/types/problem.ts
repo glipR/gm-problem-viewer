@@ -3,12 +3,14 @@ export interface ProblemLimits {
   memory: number
 }
 
+export type ProblemState = 'draft' | 'in-progress' | 'review' | 'complete' | 'archive'
+
 export interface ProblemConfig {
   name: string
   type: 'standard' | 'interactive' | 'multi'
   tags: string[]
   difficulty?: number
-  state: 'draft' | 'in-progress' | 'review' | 'complete'
+  state: ProblemState
   limits: ProblemLimits
   author: string
 }
@@ -45,8 +47,6 @@ export interface Problem {
     output: OutputValidator,
   }
 }
-
-export type ProblemState = 'draft' | 'in-progress' | 'review' | 'complete'
 
 export interface TestCase {
   name: string

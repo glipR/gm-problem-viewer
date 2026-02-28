@@ -152,7 +152,7 @@ def run_individual_testcase(
             test_set=test_case.set_name,
             verdict="RTE",
             time_ms=0,  # TODO
-            comment="Runtime Error",
+            comment=result.stderr,
         )
     # Get result against candidate solution
     judge_sol = get_candidate_solution(problem_path)

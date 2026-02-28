@@ -8,6 +8,7 @@ const STATE_COLORS: Record<string, string> = {
   'in-progress': 'blue',
   review: 'orange',
   complete: 'green',
+  archive: 'gray',
 }
 
 interface Props {

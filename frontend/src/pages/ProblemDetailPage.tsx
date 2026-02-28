@@ -46,6 +46,7 @@ const STATE_COLORS: Record<string, string> = {
   'in-progress': 'blue',
   review: 'yellow',
   complete: 'green',
+  archive: 'gray',
 }
 
 const STATUS_COLORS: Record<string, string> = {
