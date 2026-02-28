@@ -1,15 +1,8 @@
-import { Badge, Card, Group, Progress, Stack, Text, Tooltip } from '@mantine/core'
+import { Card, Group, Progress, Stack, Text, Tooltip, Badge } from '@mantine/core'
 import type { Problem } from '../../types/problem'
 import FacetIcons from './FacetIcons'
 import { useReviewProgress } from '../../hooks/useReviewProgress'
-
-const STATE_COLORS: Record<string, string> = {
-  draft: 'gray',
-  'in-progress': 'blue',
-  review: 'orange',
-  complete: 'green',
-  archive: 'gray',
-}
+import StateSelector from '../StateSelector'
 
 interface Props {
   problem: Problem
@@ -39,9 +32,7 @@ export default function StaticProblemCard({ problem, onSelect }: Props) {
       <Stack gap={6}>
         {/* Top row: slug + state badge + tags + difficulty */}
         <Group justify="space-between" align="flex-start" wrap="nowrap" gap={4}>
-          <Tooltip label={problem.config.state?.toUpperCase()}>
-            <Badge circle size="xs" color={STATE_COLORS[problem.config.state] ?? 'gray'}></Badge>
-          </Tooltip>
+          <StateSelector slug={problem.slug} currentState={problem.config.state} size="xs" />
           <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace' }}>
             {problem.slug}
           </Text>

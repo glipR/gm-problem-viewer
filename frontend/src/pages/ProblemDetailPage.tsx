@@ -24,6 +24,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getProblem, runProblem, reviewProblem, reviewProblemAI, getLatestGenerateJob, getMergedResults, getLatestValidatorJob, getTodo } from '../api/problems'
 import FacetIcons from '../components/kanban/FacetIcons'
+import StateSelector from '../components/StateSelector'
 import StatementTab from '../components/detail/StatementTab'
 import SolutionsTab from '../components/detail/SolutionsTab'
 import TestsTab from '../components/detail/TestsTab'
@@ -39,14 +40,6 @@ import type { JobStatus } from '../types/problem'
 interface Props {
   slug: string
   onBack: () => void
-}
-
-const STATE_COLORS: Record<string, string> = {
-  draft: 'gray',
-  'in-progress': 'blue',
-  review: 'yellow',
-  complete: 'green',
-  archive: 'gray',
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -183,9 +176,7 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
 
           {/* Title and basic info */}
           <Group gap={12} wrap="wrap">
-            <Tooltip label={problem.config.state?.toUpperCase()}>
-              <Badge circle size="md" color={STATE_COLORS[problem.config.state] ?? 'gray'}></Badge>
-            </Tooltip>
+            <StateSelector slug={slug} currentState={problem.config.state} size="md" />
             <Text size="xl" fw={700} lh={1.2}>
               {problem.config.name}
             </Text>

@@ -17,8 +17,9 @@ export function usePatchProblemState() {
   return useMutation({
     mutationFn: ({ slug, state }: { slug: string; state: string }) =>
       patchProblemState(slug, state),
-    onSettled: () => {
+    onSettled: (_data, _err, variables) => {
       queryClient.invalidateQueries({ queryKey: ['problems'] })
+      queryClient.invalidateQueries({ queryKey: ['problem', variables.slug] })
     },
   })
 }
