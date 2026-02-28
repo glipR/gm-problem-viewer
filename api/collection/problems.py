@@ -83,6 +83,80 @@ def get_problem(problems_dir: Path, problem_slug: str) -> Problem:
     )
 
 
+def create_problem(
+    problems_dir: Path,
+    slug: str,
+    name: str,
+    state: str = "draft",
+    problem_type: str = "standard",
+) -> None:
+    """Create a new problem directory with default structure on disk."""
+    problem_path = problems_dir / slug
+    if problem_path.exists():
+        raise FileExistsError(f"Problem '{slug}' already exists at {problem_path}")
+
+    # Create directory structure
+    problem_path.mkdir(parents=True)
+    (problem_path / "data").mkdir()
+    (problem_path / "solutions").mkdir()
+    (problem_path / "validators" / "input").mkdir(parents=True)
+    (problem_path / "validators" / "output").mkdir(parents=True)
+
+    # Write empty statement
+    (problem_path / "statement.md").write_text("", encoding="utf-8")
+
+    # Write config.yaml
+    config = {
+        "name": name,
+        "type": problem_type,
+        "state": state,
+        "author": "",
+        "tags": [],
+        "limits": {"time": 1, "memory": 262144},
+    }
+    (problem_path / "config.yaml").write_text(
+        yaml.dump(config, default_flow_style=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+
+    # Create judge.py boilerplate for interactive problems
+    if problem_type == "interactive":
+        judge_code = '''\
+"""---
+name: Judge
+---
+"""
+import sys
+
+
+def read_line() -> str:
+    return input()
+
+
+def write_line(s: str) -> None:
+    print(s, flush=True)
+
+
+def make_result(correct: bool, message: str = "") -> None:
+    if correct:
+        print(f"AC {message}", file=sys.stderr)
+    else:
+        print(f"WA {message}", file=sys.stderr)
+    sys.exit(0 if correct else 1)
+
+
+def grade() -> None:
+    pass  # TODO: implement judge logic
+
+
+if __name__ == "__main__":
+    grade()
+'''
+        (problem_path / "validators" / "output" / "judge.py").write_text(
+            judge_code, encoding="utf-8"
+        )
+
+
 def search_problems(
     problems_dir: Path,
     q: str | None = None,

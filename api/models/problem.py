@@ -26,7 +26,7 @@ class ProblemLimits(BaseModel):
 
 class ProblemConfig(BaseModel):
     name: str
-    type: str  # "standard" | "interactive"
+    type: str  # "standard" | "interactive" | "multi"
     tags: list[str] = []
     difficulty: int | None = None
     export_config: dict[str, ExportTarget] = {}
@@ -229,6 +229,13 @@ class JobStatusResponse(BaseModel):
 
 class PatchProblemRequest(BaseModel):
     state: str  # "draft" | "in-progress" | "review" | "complete"
+
+
+class CreateProblemRequest(BaseModel):
+    name: str
+    slug: str
+    state: str = "draft"
+    type: str = "standard"
 
 
 # --- Statement ---

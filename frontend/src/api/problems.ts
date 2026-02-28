@@ -3,6 +3,16 @@ import type { Problem, JobStatus, CheckResult, TestSetDetail, SolutionsRunResult
 
 const client = axios.create({ baseURL: '/api' })
 
+export async function createProblem(req: {
+  name: string
+  slug: string
+  state?: string
+  type?: string
+}): Promise<Problem> {
+  const { data } = await client.post<Problem>('/problems/', req)
+  return data
+}
+
 export async function getProblems(): Promise<Problem[]> {
   const { data } = await client.get<Problem[]>('/problems/')
   return data

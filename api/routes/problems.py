@@ -11,9 +11,11 @@ from api.collection.problems import (
     get_problem as col_get_problem,
     patch_problem_config as col_patch_problem_config,
     search_problems as col_search_problems,
+    create_problem as col_create_problem,
 )
 from api.config import get_settings
 from api.models.problem import (
+    CreateProblemRequest,
     PatchProblemRequest,
     Problem,
 )
@@ -29,6 +31,23 @@ def list_problems():
     problems = col_list_problems(settings.problems_root)
 
     return problems
+
+
+@router.post("/", response_model=Problem, status_code=201)
+def create_problem(req: CreateProblemRequest):
+    """Create a new problem directory with default structure."""
+    settings = get_settings()
+    try:
+        col_create_problem(
+            settings.problems_root,
+            slug=req.slug,
+            name=req.name,
+            state=req.state,
+            problem_type=req.type,
+        )
+    except FileExistsError:
+        raise HTTPException(status_code=409, detail=f"Problem '{req.slug}' already exists")
+    return col_get_problem(settings.problems_root, req.slug)
 
 
 @router.get("/search", response_model=list[Problem])

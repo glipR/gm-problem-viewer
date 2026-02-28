@@ -5,7 +5,7 @@ export interface ProblemLimits {
 
 export interface ProblemConfig {
   name: string
-  type: 'standard' | 'interactive'
+  type: 'standard' | 'interactive' | 'multi'
   tags: string[]
   difficulty?: number
   state: 'draft' | 'in-progress' | 'review' | 'complete'
