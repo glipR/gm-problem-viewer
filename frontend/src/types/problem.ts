@@ -136,3 +136,12 @@ export interface ReviewJobResult {
   phase2?: PhaseResult
   by_category?: Record<string, CategoryResult>
 }
+
+export interface AiReviewCheck {
+  name: string
+  summary: string
+}
+
+export interface AiReviewResult {
+  checks: AiReviewCheck[]
+}

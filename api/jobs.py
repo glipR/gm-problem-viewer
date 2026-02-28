@@ -30,6 +30,7 @@ class JobType:
     RUN_SOLUTION = "run_solution"
     EXPORT = "export"
     REVIEW_DETERMINISTIC = "review-deterministic"
+    REVIEW_AI = "review-ai"
 
 
 # --- Internal helpers ---

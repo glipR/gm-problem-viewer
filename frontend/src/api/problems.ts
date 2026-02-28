@@ -125,6 +125,11 @@ export async function reviewProblemAI(slug: string): Promise<{ job_ids: string[]
   return data
 }
 
+export async function getLatestAiReviewJob(slug: string): Promise<JobStatus | null> {
+  const { data } = await client.get<JobStatus | null>(`/problems/${slug}/review/ai/latest`)
+  return data
+}
+
 export async function getLatestValidatorJob(slug: string): Promise<JobStatus | null> {
   const { data } = await client.get<JobStatus | null>(`/problems/${slug}/validators/latest`)
   return data

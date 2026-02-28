@@ -31,6 +31,7 @@ import ValidatorsTab from '../components/detail/ValidatorsTab'
 import TodoTab from '../components/detail/TodoTab'
 import EditorialTab from '../components/detail/EditorialTab'
 import { ProgressOverlay, JobStepType } from '../components/detail/ProgressOverlay'
+import { AiReviewDialog } from '../components/detail/AiReviewDialog'
 import { useReviewProgress } from '../hooks/useReviewProgress'
 import { useJobPoller } from '../hooks/useJobPoller'
 import type { JobStatus } from '../types/problem'
@@ -58,6 +59,7 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
   const qc = useQueryClient()
   const [runJobIds, setRunJobIds] = useState<[string, string, string] | null>(null)
   const [reviewJobId, setReviewJobId] = useState<string | null>(null)
+  const [aiReviewJobId, setAiReviewJobId] = useState<string | null>(null)
   const { progress: reviewProgress, color: reviewColor, issues: reviewIssues, byCategory } = useReviewProgress(slug)
 
   const [activeTestsRun, setActiveTestsRun] = useState<string | null>(null)
@@ -89,9 +91,9 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
 
   const { mutate: reviewAI, isPending: aiPending } = useMutation({
     mutationFn: () => reviewProblemAI(slug),
-    onSuccess: () => notifications.show({ message: 'AI Review started', color: 'blue' }),
+    onSuccess: (data) => setAiReviewJobId(data.job_ids[0]),
     onError: () =>
-      notifications.show({ message: 'AI Review not yet implemented', color: 'orange' }),
+      notifications.show({ message: 'AI Review failed to start', color: 'red' }),
   })
 
   // Job statuses to load for tab icons
@@ -387,6 +389,15 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
           steps={[{ jobId: reviewJobId, type: JobStepType.REVIEW_DETERMINISTIC }]}
           slug={slug}
           onDone={() => setReviewJobId(null)}
+        />
+      )}
+
+      {aiReviewJobId && (
+        <AiReviewDialog
+          key={aiReviewJobId}
+          jobId={aiReviewJobId}
+          slug={slug}
+          onClose={() => setAiReviewJobId(null)}
         />
       )}
     </Box>
