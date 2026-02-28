@@ -4,6 +4,8 @@ from queue import Queue
 import random
 from typing import Callable
 
+from .random import select_k_distinct
+
 ValueGen = int | Callable[tuple[int, int], int]
 
 
@@ -75,52 +77,41 @@ class Graph:
             return [(a, b) for a, b, c in edge_copy]
 
     def distance(
-        self, source: int, *, respect_direction: bool = True, use_weights: bool = True
+        self,
+        source: int,
+        *,
+        respect_direction: bool = True,
+        reduce_distance=lambda r, c: r + c,
+        start_distance=0,
+        default_distance=float("inf"),
     ) -> tuple[dict[int, float], dict[int, int | None]]:
-        distance = collections.defaultdict(lambda: float("inf"))
-        distance[source] = 0
+        distance = collections.defaultdict(lambda: default_distance)
+        distance[source] = start_distance
         parent = collections.defaultdict(lambda: None)
-        if not use_weights:
-            # BFS
-            queue = Queue()
-            queue.put(source)
-            expanded = set()
-            expanded.add(source)
-            while not queue.empty():
-                node = queue.get()
-                for adj, _w in self.forward_adj[node]:
-                    if adj not in expanded:
-                        expanded.add(adj)
-                        distance[adj] = distance[node] + 1
-                        parent[adj] = node
-                        queue.put(adj)
-                if not respect_direction:
-                    for adj, _w in self.backward_adj[node]:
-                        if adj not in expanded:
-                            expanded.add(adj)
-                            distance[adj] = distance[node] + 1
-                            parent[adj] = node
-                            queue.put(adj)
-        else:
-            # Dijkstra
-            heap = []
-            heappush(heap, (distance[source], source))
-            while heap:
-                dist, node = heappop(heap)
-                if dist > distance[node]:
-                    continue
+        # Dijkstra
+        heap = []
+        heappush(heap, (distance[source], source))
+        while heap:
+            dist, node = heappop(heap)
+            if dist > distance[node]:
+                continue
+            for adj, w in self.forward_adj[node]:
+                combined = reduce_distance(dist, w)
+                if combined < distance[adj]:
+                    distance[adj] = combined
+                    heappush(heap, (distance[adj], adj))
+                    parent[adj] = node
+            if not respect_direction:
                 for adj, w in self.forward_adj[node]:
-                    if dist + w < distance[adj]:
-                        distance[adj] = dist + w
+                    combined = reduce_distance(dist, w)
+                    if combined < distance[adj]:
+                        distance[adj] = combined
                         heappush(heap, (distance[adj], adj))
                         parent[adj] = node
-                if not respect_direction:
-                    for adj, w in self.forward_adj[node]:
-                        if dist + w < distance[adj]:
-                            distance[adj] = dist + w
-                            heappush(heap, (distance[adj], adj))
-                            parent[adj] = node
         return distance, parent
+
+
+### Trees
 
 
 class Path(Graph):
@@ -195,3 +186,100 @@ class RandomTree(Graph):
         for i in range(1 + off, n + off):
             j = random.randint(off, i - 1)
             self.add_edge(j, i, c)
+
+
+### Other Graphs
+
+
+class Complete(Graph):
+    """
+    Path from a to any b > a
+    """
+
+    def __init__(self, n: int, *, one_indexed: bool = True, c: ValueGen = 1):
+        super().__init__(n, one_indexed=one_indexed)
+        # Add edges from start to finish
+        for i in self.vertices():
+            for j in self.vertices():
+                if j > i:
+                    self.add_edge(i, j, c)
+
+
+class RandomGraph(Graph):
+    """
+    Purely random graph, edge selection routine depends on relative size of edge set.
+
+    No guarantee of connectivity
+    """
+
+    def __init__(
+        self,
+        n: int,
+        m: int,
+        *,
+        one_indexed: bool = True,
+        c: ValueGen = 1,
+        fixed_edges: list[tuple[int, int]] = [],
+    ):
+        super().__init__(n, one_indexed=one_indexed)
+        off = int(one_indexed)
+        fixed_ordered = set((min(a, b), max(a, b)) for a, b in fixed_edges)
+        if m > n**2 / 20:
+            # We're already generating a tenth of the total edge set, so just generate the full edge set and randomise.
+            edge_set = [
+                (i, j)
+                for i in self.vertices()
+                for j in self.vertices()
+                if i < j and (i, j) not in fixed_ordered
+            ]
+            edge_actual = select_k_distinct(edge_set, m)
+            for i, j in edge_actual:
+                self.add_edge(i, j, c)
+            self.randomise_edge_dir()
+        else:
+            # The edges make up a small selection of the possible options, so randomly select
+            try_limit = 10
+            edge_set = fixed_ordered
+            edge_list = fixed_edges
+            tries = 0
+            while len(edge_list) < m and tries < try_limit:
+                i = random.randint(off, off + n - 1)
+                j = random.randint(off, off + n - 1)
+                if i == j:
+                    tries += 1
+                    continue
+                i, j = min(i, j), max(i, j)
+                if (i, j) in edge_set:
+                    tries += 1
+                    continue
+                tries = 0
+                edge_set.add((i, j))
+                edge_list.append((i, j))
+            if len(edge_list) < m:
+                raise ValueError(f"Failed to generate {m} edges for {n} vertex graph")
+            for i, j in edge_list:
+                self.add_edge(i, j, c)
+            self.randomise_edge_dir()
+
+
+class RandomConnectedGraph(RandomGraph):
+    def __init__(self, n: int, m: int, *, one_indexed: bool = True, c: ValueGen = 1):
+        # Generate tree_edges, to be used as the basis for RandomGraph.
+        off = int(one_indexed)
+        tree_edges = []
+        for i in range(1 + off, n + off):
+            j = random.randint(off, i - 1)
+            tree_edges.append((j, i))
+
+        super().__init__(n, m, one_indexed=one_indexed, fixed_edges=tree_edges, c=c)
+
+
+class Cycle(Graph):
+    def __init__(self, n: int, *, one_indexed: bool = True, c: ValueGen = 1):
+        super().__init__(n, one_indexed=one_indexed)
+        off = int(one_indexed)
+        for i in self.vertices():
+            ni = i + 1
+            if ni >= off + n:
+                ni -= n
+            self.add_edge(i, ni, c)
