@@ -48,6 +48,7 @@ def run_all_checks(problem: Problem) -> ReviewResult:
         has_solution_with_verdict(problem, "TLE"),
         has_test_set_acs(problem),
         has_multiple_languages(problem),
+        has_editorial(problem),
     ]
 
     def _phase_result(checks: list[CheckResult]) -> PhaseResult:
