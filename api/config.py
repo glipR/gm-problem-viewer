@@ -33,6 +33,25 @@ class Settings:
         # Override via PORT env var or config.yaml port key.
         self.port: int = int(os.environ.get("PORT", cfg.get("port", 8001)))
 
+        # C++ compile flags for solution execution.
+        # Override via config.yaml cpp_flags key (list of strings).
+        _default_cpp_flags = [
+            "-std=c++17",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Wshadow",
+            "-DONLINE_JUDGE",
+        ]
+        raw = cfg.get("cpp_flags")
+        if raw is not None:
+            if isinstance(raw, list):
+                self.cpp_flags: list[str] = [str(f) for f in raw]
+            else:
+                self.cpp_flags = str(raw).split()
+        else:
+            self.cpp_flags = _default_cpp_flags
+
 
 @lru_cache
 def get_settings() -> Settings:

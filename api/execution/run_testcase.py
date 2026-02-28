@@ -10,6 +10,7 @@ from pathlib import Path
 from api.collection.problems import get_problem
 from api.collection.solutions import get_candidate_solution, get_solutions
 from api.collection.test_sets import get_test_sets
+from api.execution.execute_cpp import CompileError, run_cpp_file
 from api.execution.execute_python import run_python_file
 from api.execution.run_validators import run_output_validator_standard
 from api.jobs import update_job
@@ -110,8 +111,15 @@ def output_individual_testcase(
             problem.config.limits.time,
         )
         return result
+    elif solution.language == "cpp":
+        result = run_cpp_file(
+            solution.full_path(problem_path),
+            test_case.full_path(problem_path),
+            problem.config.limits.time,
+        )
+        return result
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unsupported language: {solution.language}")
 
 
 def run_individual_testcase(
@@ -122,6 +130,14 @@ def run_individual_testcase(
     # Get solution output
     try:
         result = output_individual_testcase(problem_path, problem, solution, test_case)
+    except CompileError as e:
+        return Verdict(
+            test_case=test_case.name,
+            test_set=test_case.set_name,
+            verdict="CE",
+            time_ms=0,
+            comment=e.stderr,
+        )
     except TimeoutExpired:
         return Verdict(
             test_case=test_case.name,
