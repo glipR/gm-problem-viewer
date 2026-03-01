@@ -12,6 +12,7 @@ import {
   Loader,
   Stack,
   Button,
+  Menu,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
@@ -22,7 +23,7 @@ import {
   IconUpload,
 } from '@tabler/icons-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getProblem, runProblem, reviewProblem, reviewProblemAI, getLatestGenerateJob, getMergedResults, getLatestValidatorJob, getTodo } from '../api/problems'
+import { getProblem, runProblem, reviewProblem, reviewProblemAI, getLatestGenerateJob, getMergedResults, getLatestValidatorJob, getTodo, exportProblem } from '../api/problems'
 import FacetIcons from '../components/kanban/FacetIcons'
 import StateSelector from '../components/StateSelector'
 import StatementTab from '../components/detail/StatementTab'
@@ -88,6 +89,15 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
     onSuccess: (data) => setAiReviewJobId(data.job_ids[0]),
     onError: () =>
       notifications.show({ message: 'AI Review failed to start', color: 'red' }),
+  })
+
+  const [exportJobId, setExportJobId] = useState<string | null>(null)
+
+  const { mutate: doExport, isPending: exportPending } = useMutation({
+    mutationFn: (target: string) => exportProblem(slug, target),
+    onSuccess: (data) => setExportJobId(data.job_ids[0]),
+    onError: () =>
+      notifications.show({ message: 'Export failed to start', color: 'red' }),
   })
 
   // Job statuses to load for tab icons
@@ -252,15 +262,46 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
               >
                 AI Review
               </Button>
-              <Button
-                size="xs"
-                variant="light"
-                color="green"
-                leftSection={<IconUpload size={14} />}
-                onClick={() => notifications.show({ message: 'Export not yet implemented', color: 'orange' })}
-              >
-                Export
-              </Button>
+              {(() => {
+                const targets = Object.keys(problem.config.export_config ?? {})
+                if (targets.length === 0) return null
+                if (targets.length === 1) {
+                  return (
+                    <Button
+                      size="xs"
+                      variant="light"
+                      color="green"
+                      leftSection={<IconUpload size={14} />}
+                      loading={exportPending}
+                      onClick={() => doExport(targets[0])}
+                    >
+                      Export
+                    </Button>
+                  )
+                }
+                return (
+                  <Menu shadow="md" width={160}>
+                    <Menu.Target>
+                      <Button
+                        size="xs"
+                        variant="light"
+                        color="green"
+                        leftSection={<IconUpload size={14} />}
+                        loading={exportPending}
+                      >
+                        Export
+                      </Button>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      {targets.map((t) => (
+                        <Menu.Item key={t} onClick={() => doExport(t)}>
+                          {t}
+                        </Menu.Item>
+                      ))}
+                    </Menu.Dropdown>
+                  </Menu>
+                )
+              })()}
             </Group>
           </Group>
         </Stack>
@@ -390,6 +431,15 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
           jobId={aiReviewJobId}
           slug={slug}
           onClose={() => setAiReviewJobId(null)}
+        />
+      )}
+
+      {exportJobId && (
+        <ProgressOverlay
+          key={exportJobId}
+          steps={[{ jobId: exportJobId, type: JobStepType.EXPORT }]}
+          slug={slug}
+          onDone={() => setExportJobId(null)}
         />
       )}
     </Box>

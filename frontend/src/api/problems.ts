@@ -214,3 +214,8 @@ export async function getEditorial(slug: string): Promise<{ raw: string }> {
 export async function openEditorialInEditor(slug: string): Promise<void> {
   await client.post(`/problems/${slug}/editorial/open`)
 }
+
+export async function exportProblem(slug: string, target: string): Promise<{ job_ids: string[] }> {
+  const { data } = await client.post<{ job_ids: string[] }>(`/problems/${slug}/export/`, { target })
+  return data
+}

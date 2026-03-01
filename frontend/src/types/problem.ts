@@ -5,6 +5,14 @@ export interface ProblemLimits {
 
 export type ProblemState = 'draft' | 'in-progress' | 'review' | 'complete' | 'archive'
 
+export interface ExportTarget {
+  type: string
+  location: string
+  clear_directory?: boolean
+  overwrite_slug?: string
+  generate_output_files?: boolean
+}
+
 export interface ProblemConfig {
   name: string
   type: 'standard' | 'interactive' | 'multi'
@@ -14,6 +22,7 @@ export interface ProblemConfig {
   state: ProblemState
   limits: ProblemLimits
   author: string
+  export_config?: Record<string, ExportTarget>
 }
 
 export interface Solution {

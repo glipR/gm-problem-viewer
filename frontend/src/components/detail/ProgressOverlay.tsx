@@ -15,6 +15,7 @@ export enum JobStepType {
   RUN_VALIDATORS = 'run_validators',
   RUN_SOLUTION = 'run_solution',
   REVIEW_DETERMINISTIC = 'review-deterministic',
+  EXPORT = 'export',
 }
 
 interface StepConfig {
@@ -40,6 +41,10 @@ const STEP_CONFIG: Record<JobStepType, StepConfig> = {
     label: 'Running checks',
     invalidates: (slug) => [['latest-review-job', slug]],
   },
+  [JobStepType.EXPORT]: {
+    label: 'Exporting',
+    invalidates: () => [],
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -63,7 +68,7 @@ interface Props {
 
 const TERMINAL = new Set(['done', 'failed'])
 
-function PhaseRow({ label, status }: { label: string; status?: string }) {
+function PhaseRow({ label, status, subtitle }: { label: string; status?: string; subtitle?: string }) {
   let icon: React.ReactNode
   let color: string
 
@@ -90,9 +95,14 @@ function PhaseRow({ label, status }: { label: string; status?: string }) {
       <Box style={{ width: 14, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
         {icon}
       </Box>
-      <Text size="xs" c={color}>
-        {label}
-      </Text>
+      <Box>
+        <Text size="xs" c={color}>
+          {label}
+        </Text>
+        {subtitle && (
+          <Text size="xs" c="dimmed">{subtitle}</Text>
+        )}
+      </Box>
     </Group>
   )
 }
@@ -170,13 +180,20 @@ export function ProgressOverlay({ steps, slug, onDone }: Props) {
           </Group>
 
           <Stack gap={6} mb={10}>
-            {steps.map((step, i) => (
-              <PhaseRow
-                key={step.jobId}
-                label={STEP_CONFIG[step.type].label}
-                status={results[i]?.data?.status}
-              />
-            ))}
+            {steps.map((step, i) => {
+              const jobData = results[i]?.data
+              const stepMsg = jobData?.status === 'running' && jobData?.result && typeof jobData.result === 'object' && 'step' in (jobData.result as Record<string, unknown>)
+                ? (jobData.result as Record<string, unknown>).step as string
+                : undefined
+              return (
+                <PhaseRow
+                  key={step.jobId}
+                  label={STEP_CONFIG[step.type].label}
+                  status={jobData?.status}
+                  subtitle={stepMsg}
+                />
+              )
+            })}
           </Stack>
 
           <Progress
