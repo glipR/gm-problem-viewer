@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Box, Button, Center, Group, Loader, MultiSelect, SimpleGrid, Text, TextInput, Title } from '@mantine/core'
+import { Box, Button, Center, Group, Loader, MultiSelect, Select, SimpleGrid, Text, TextInput, Title } from '@mantine/core'
 import { IconSearch, IconListCheck } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -15,6 +15,8 @@ export default function SearchPage({ onProblemClick }: Props) {
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [selectedContests, setSelectedContests] = useState<string[]>([])
+  const [difficultySort, setDifficultySort] = useState<string | null>(null)
 
   // Debounce the text query to avoid a request per keystroke
   useEffect(() => {
@@ -31,7 +33,38 @@ export default function SearchPage({ onProblemClick }: Props) {
     return Array.from(tags).sort()
   }, [allProblems])
 
-  const { data: results, isLoading, isError } = useSearchProblems(debouncedQuery, selectedTags)
+  const allContests = useMemo(() => {
+    if (!allProblems) return []
+    const contests = new Set<string>()
+    allProblems.forEach((p) => p.config.contests?.forEach((c) => contests.add(c)))
+    return Array.from(contests).sort()
+  }, [allProblems])
+
+  const { data: rawResults, isLoading, isError } = useSearchProblems(debouncedQuery, selectedTags)
+
+  const results = useMemo(() => {
+    if (!rawResults) return rawResults
+    let filtered = rawResults
+    // Client-side contest filter (AND logic)
+    if (selectedContests.length > 0) {
+      filtered = filtered.filter((p) =>
+        selectedContests.every((c) => p.config.contests?.includes(c))
+      )
+    }
+    // Difficulty sort
+    if (difficultySort === 'asc' || difficultySort === 'desc') {
+      const dir = difficultySort === 'asc' ? 1 : -1
+      filtered = [...filtered].sort((a, b) => {
+        const da = a.config.difficulty
+        const db = b.config.difficulty
+        if (da == null && db == null) return 0
+        if (da == null) return 1
+        if (db == null) return -1
+        return (da - db) * dir
+      })
+    }
+    return filtered
+  }, [rawResults, selectedContests, difficultySort])
 
   const qc = useQueryClient()
   const { mutate: reviewAll, isPending: reviewAllPending } = useMutation({
@@ -68,6 +101,26 @@ export default function SearchPage({ onProblemClick }: Props) {
           data={allTags}
           value={selectedTags}
           onChange={setSelectedTags}
+          clearable
+        />
+      </Group>
+
+      <Group mb="lg" grow>
+        <MultiSelect
+          placeholder="Filter by contest"
+          data={allContests}
+          value={selectedContests}
+          onChange={setSelectedContests}
+          clearable
+        />
+        <Select
+          placeholder="Sort by difficulty"
+          data={[
+            { value: 'asc', label: 'Difficulty ↑' },
+            { value: 'desc', label: 'Difficulty ↓' },
+          ]}
+          value={difficultySort}
+          onChange={setDifficultySort}
           clearable
         />
       </Group>

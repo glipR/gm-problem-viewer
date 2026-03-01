@@ -36,29 +36,38 @@ export default function ProblemCard({ problem, onSelect }: Props) {
       onClick={() => onSelect?.(problem.slug)}
     >
       <Stack gap={6}>
-        {/* Top row: slug + tags + difficulty */}
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
+        {/* Top row: slug + contest badges + difficulty */}
+        <Group justify="space-between" align="flex-start" wrap="nowrap" gap={4}>
           <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace' }}>
             {problem.slug}
           </Text>
-          <Group gap={4} wrap="nowrap">
+          {problem.config.contests?.map((c) => (
+            <Badge key={c} size="xs" variant="light" color="grape">
+              {c}
+            </Badge>
+          ))}
+          <div style={{flexGrow: 1}} />
+          {problem.config.difficulty != null && (
+            <Badge size="xs" variant="filled" color="indigo">
+              {problem.config.difficulty}
+            </Badge>
+          )}
+        </Group>
+
+        {/* Problem title + tag badges */}
+        <Group gap={6} align="center" wrap="nowrap">
+          <Text fw={600} size="sm" lineClamp={2} style={{ flexShrink: 1, minWidth: 0 }}>
+            {problem.config.name}
+          </Text>
+          <div style={{flexGrow: 1}} />
+          <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
             {problem.config.tags.map((tag) => (
               <Badge key={tag} size="xs" variant="light">
                 {tag}
               </Badge>
             ))}
-            {problem.config.difficulty != null && (
-              <Badge size="xs" variant="filled" color="indigo">
-                {problem.config.difficulty}
-              </Badge>
-            )}
           </Group>
         </Group>
-
-        {/* Problem title */}
-        <Text fw={600} size="sm" lineClamp={2}>
-          {problem.config.name}
-        </Text>
 
         {/* Progress bar */}
         <Tooltip
