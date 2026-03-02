@@ -103,6 +103,7 @@ export interface SolutionRunResult {
   solution_path: string
   verdicts: Verdict[]
   overall: string
+  set_consistent: Record<string, string>
 }
 
 export interface SolutionsRunResult {

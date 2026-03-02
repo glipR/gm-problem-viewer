@@ -49,6 +49,8 @@ def run_solutions_job(
         results = RunSolutionsResponse(solutions=[], status=None)
         last_flush = time.monotonic()
 
+        failed_expectations = False
+
         for solution in solutions:
             if solution.path in req.solution_paths:
                 results.solutions.append(
@@ -56,15 +58,18 @@ def run_solutions_job(
                         solution_path=solution.path,
                         verdicts=[],
                         overall="PD",
+                        set_consistent={},
                     )
                 )
                 for test_set in test_sets:
                     if (not req.test_set) or req.test_set == test_set:
+                        set_verdicts = []
                         for test_case in test_set.test_cases:
                             verdict = run_individual_testcase(
                                 problem_path, problem, solution, test_case
                             )
                             results.solutions[-1].verdicts.append(verdict)
+                            set_verdicts.append(verdict)
 
                             now = time.monotonic()
                             if now - last_flush >= _FLUSH_INTERVAL:
@@ -73,6 +78,14 @@ def run_solutions_job(
                                     result=results.model_dump(),
                                 )
                                 last_flush = now
+                        expectation = solution.expectation_for_set(test_set)
+                        non_AC = [x.verdict for x in set_verdicts if x.verdict != "AC"]
+                        set_verdict = non_AC[0] if non_AC else "AC"
+                        if expectation is not None and set_verdict not in expectation:
+                            results.solutions[-1].set_consistent[
+                                test_set.name
+                            ] = f"Expected verdict {expectation} for {test_set.name}, got {set_verdict}"
+                            failed_expectations = True
                 non_AC = [
                     x.verdict
                     for x in results.solutions[-1].verdicts
@@ -89,7 +102,7 @@ def run_solutions_job(
 
         update_job(
             job_id,
-            status="done",
+            status="failed" if failed_expectations else "done",
             result=results.model_dump(),
         )
 

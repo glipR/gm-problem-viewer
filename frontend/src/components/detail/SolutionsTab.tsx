@@ -89,10 +89,17 @@ function groupByFolder(solutions: Solution[]): [string, Solution[]][] {
 // ExpectationBadges
 // ---------------------------------------------------------------------------
 
-function ExpectationBadges({ expectation }: { expectation: Solution['expectation'] }) {
+function ExpectationBadges({ expectation, overall, errors }: { expectation: Solution['expectation'], overall?: SolutionRunResult['overall'], errors?: SolutionRunResult['set_consistent'] }) {
   if (typeof expectation === 'string') {
+    if (overall && overall !== "PD" &&  overall != expectation) {
+      return <Tooltip label={`Expected ${expectation}, got ${overall}.`}>
+        <Badge size="xs" color={verdictColor(expectation)} variant="light" style={{border: "2px dashed red"}}>
+          {expectation}
+        </Badge>
+      </Tooltip>
+    }
     return (
-      <Badge size="xs" color={verdictColor(expectation)} variant="light">
+      <Badge size="xs" color={verdictColor(expectation)} variant="light" style={{border: overall ? "1px solid lime" : "none"}}>
         {expectation}
       </Badge>
     )
@@ -101,8 +108,17 @@ function ExpectationBadges({ expectation }: { expectation: Solution['expectation
     <Group gap={4} wrap="nowrap">
       {Object.keys(expectation).map((set) => {
         const verdict = expectation[set]
+        if (errors && errors[set]) {
+          return (
+            <Tooltip label={errors[set]}>
+              <Badge key={set} size="xs" color={verdictColor(verdict)} variant="light" style={{border: "2px dashed red"}}>
+                {set}: {verdict}
+              </Badge>
+            </Tooltip>
+          )
+        }
         return (
-          <Badge key={set} size="xs" color={verdictColor(verdict)} variant="light">
+          <Badge key={set} size="xs" color={verdictColor(verdict)} variant="light" style={{border: errors !== undefined ? "1px solid lime" : "none"}}>
             {set}: {verdict}
           </Badge>
         )
@@ -224,7 +240,7 @@ function SolutionItem({
             )}
           </Group>
           <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
-            <ExpectationBadges expectation={solution.expectation} />
+            <ExpectationBadges expectation={solution.expectation} overall={result?.overall} errors={result?.set_consistent} />
             {result && (
               <Badge
                 size="xs"

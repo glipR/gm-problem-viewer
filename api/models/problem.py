@@ -169,6 +169,7 @@ class RunSolutionResponse(BaseModel):
     solution_path: str
     verdicts: list[Verdict]
     overall: str  # aggregate verdict
+    set_consistent: dict[str, str]  # Any errors with set expectation consistency
 
 
 class RunSolutionsResponse(BaseModel):
