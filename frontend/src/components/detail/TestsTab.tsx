@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import {
   Box,
   Button,
@@ -28,7 +28,12 @@ import {
   IconAlertTriangle,
   IconFile,
   IconCode,
+  IconGripVertical,
 } from '@tabler/icons-react'
+import { DndContext, closestCenter, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { Problem, TestSetDetail, JobStatus } from '../../types/problem'
 import {
   getTestSets,
@@ -40,6 +45,7 @@ import {
   updateTestCaseDescription,
   openGeneratorInEditor,
   openTestCaseInEditor,
+  reorderTestSets,
 } from '../../api/problems'
 import { useJobPoller } from '../../hooks/useJobPoller'
 
@@ -215,6 +221,248 @@ function AddTestSetModal({
 }
 
 // ---------------------------------------------------------------------------
+// Sortable Accordion Item wrapper
+// ---------------------------------------------------------------------------
+
+/** Compact header shown in the DragOverlay while dragging. */
+function TestSetDragPreview({ set }: { set: TestSetDetail }) {
+  return (
+    <Box
+      style={{
+        background: 'var(--mantine-color-body)',
+        border: '1px solid var(--mantine-color-gray-3)',
+        borderRadius: 'var(--mantine-radius-sm)',
+        padding: '8px 12px',
+        boxShadow: 'var(--mantine-shadow-md)',
+      }}
+    >
+      <Group justify="space-between" wrap="nowrap">
+        <Group gap={6} wrap="nowrap">
+          <IconGripVertical size={14} color="var(--mantine-color-gray-5)" />
+          <Text size="sm" fw={600} style={{ fontFamily: 'monospace' }}>
+            {set.name}
+          </Text>
+          {set.config?.points != null && set.config.points > 0 && (
+            <Badge size="xs" variant="light" color="teal">
+              {set.config.points}pts
+            </Badge>
+          )}
+        </Group>
+        <Badge size="xs" color="gray" variant="light">
+          {set.test_cases.length}
+        </Badge>
+      </Group>
+    </Box>
+  )
+}
+
+function SortableTestSetItem({
+  set,
+  selected,
+  genJobId,
+  problem,
+  generate,
+  selectTest,
+  setAddTestSet,
+  openGeneratorInEditor: openGen,
+  openTestCaseInEditor: openTest,
+}: {
+  set: TestSetDetail
+  selected: SelectedTest | null
+  genJobId: string | null
+  problem: Problem
+  generate: (params: { setName: string; genName: string }) => void
+  selectTest: (setName: string, testName: string, description?: string) => void
+  setAddTestSet: (name: string) => void
+  openGeneratorInEditor: typeof openGeneratorInEditor
+  openTestCaseInEditor: typeof openTestCaseInEditor
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: set.name,
+  })
+
+  const style = {
+    // Only apply Y translation — never scaleY which squishes expanded content
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : undefined,
+  }
+
+  return (
+    <Accordion.Item ref={setNodeRef} style={style} value={set.name}>
+      <Accordion.Control py="xs">
+        <Group justify="space-between" wrap="nowrap" pr="xs">
+          <Group gap={6} wrap="nowrap">
+            <Box
+              {...attributes}
+              {...listeners}
+              style={{ cursor: 'grab', display: 'flex', alignItems: 'center' }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              <IconGripVertical size={14} color="var(--mantine-color-gray-5)" />
+            </Box>
+            <Text
+              size="sm"
+              fw={600}
+              style={{ fontFamily: 'monospace' }}
+            >
+              {set.name}
+            </Text>
+            {set.config?.points != null && set.config.points > 0 && (
+              <Badge size="xs" variant="light" color="teal">
+                {set.config.points}pts
+              </Badge>
+            )}
+          </Group>
+          <Badge size="xs" color="gray" variant="light">
+            {set.test_cases.length}
+          </Badge>
+        </Group>
+      </Accordion.Control>
+
+      <Accordion.Panel p={0}>
+        <Stack gap={0}>
+          {/* Generators */}
+          {set.generators.map((gen) => (
+            <Group
+              key={gen.name}
+              px="sm"
+              py={5}
+              justify="space-between"
+              style={{
+                borderBottom: '1px solid var(--mantine-color-gray-1)',
+                background: 'var(--mantine-color-violet-0)',
+              }}
+            >
+              <Group gap={6} wrap="nowrap">
+                <IconCode size={12} color="var(--mantine-color-violet-6)" />
+                <Text
+                  size="xs"
+                  style={{ fontFamily: 'monospace' }}
+                  c="violet"
+                >
+                  {gen.name}
+                </Text>
+              </Group>
+              <Group gap={2} wrap="nowrap">
+                <Tooltip label="Open in Cursor">
+                  <ActionIcon
+                    size="xs"
+                    variant="subtle"
+                    color="violet"
+                    onClick={() =>
+                      openGen(problem.slug, set.name, gen.name)
+                    }
+                  >
+                    <IconCode size={10} />
+                  </ActionIcon>
+                </Tooltip>
+                <Tooltip label={genJobId ? 'Generation in progress…' : `Run ${gen.name}`}>
+                  <ActionIcon
+                    size="xs"
+                    variant="subtle"
+                    color="violet"
+                    loading={!!genJobId}
+                    onClick={() =>
+                      generate({ setName: set.name, genName: gen.name })
+                    }
+                  >
+                    <IconPlayerPlay size={10} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+            </Group>
+          ))}
+
+          {/* Test cases */}
+          {set.test_cases.map((tc) => {
+            const isSelected =
+              selected?.setName === set.name &&
+              selected?.testName === tc.name
+            return (
+              <Group
+                key={tc.name}
+                px="sm"
+                py={5}
+                gap="xs"
+                wrap="nowrap"
+                style={{
+                  cursor: 'pointer',
+                  borderBottom: '1px solid var(--mantine-color-gray-1)',
+                  background: isSelected
+                    ? 'var(--mantine-color-blue-0)'
+                    : undefined,
+                }}
+                justify="space-between"
+                onClick={() =>
+                  selectTest(set.name, tc.name, tc.description)
+                }
+              >
+                <Group gap={6} wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
+                  <IconFile
+                    size={12}
+                    color={
+                      isSelected
+                        ? 'var(--mantine-color-blue-6)'
+                        : 'var(--mantine-color-gray-5)'
+                    }
+                    style={{ flexShrink: 0 }}
+                  />
+                  <Text
+                    size="xs"
+                    style={{ fontFamily: 'monospace', minWidth: 0, flex: 1 }}
+                    truncate
+                    c={isSelected ? 'blue' : undefined}
+                  >
+                    {tc.name}
+                  </Text>
+                </Group>
+                <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
+                  <Tooltip label="Open in Cursor">
+                    <ActionIcon
+                      size="xs"
+                      variant="subtle"
+                      onClick={() =>
+                        openTest(problem.slug, tc.set_name, tc.name)
+                      }
+                    >
+                      <IconCode size={12} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+              </Group>
+            )
+          })}
+
+          {set.test_cases.length === 0 && set.generators.length === 0 && (
+            <Text size="xs" c="dimmed" px="sm" py="xs" fs="italic">
+              No tests yet
+            </Text>
+          )}
+
+          {/* Add test button */}
+          <Group
+            px="xs"
+            py={4}
+            style={{ borderTop: '1px solid var(--mantine-color-gray-1)' }}
+          >
+            <Button
+              size="xs"
+              variant="subtle"
+              color="gray"
+              leftSection={<IconPlus size={10} />}
+              onClick={() => setAddTestSet(set.name)}
+            >
+              Add test
+            </Button>
+          </Group>
+        </Stack>
+      </Accordion.Panel>
+    </Accordion.Item>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main TestsTab
 // ---------------------------------------------------------------------------
 
@@ -271,6 +519,7 @@ export default function TestsTab({ problem }: Props) {
   const [addSetOpen, { open: openAddSet, close: closeAddSet }] = useDisclosure(false)
   const [addTestSet, setAddTestSet] = useState<string | null>(null)
   const [genJobId, setGenJobId] = useState<string | null>(null)
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
 
   const qc = useQueryClient()
 
@@ -344,7 +593,7 @@ export default function TestsTab({ problem }: Props) {
   })
 
   // Fall back to stub sets from problem.test_sets if the endpoint isn't available yet
-  const sets: TestSetDetail[] =
+  const serverSets: TestSetDetail[] =
     testSets ??
     problem.test_sets.map((name) => ({
       name,
@@ -352,6 +601,64 @@ export default function TestsTab({ problem }: Props) {
       test_cases: [],
       generators: [],
     }))
+
+  // Local ordering state — initialised from server, updated optimistically on drag
+  const [localOrder, setLocalOrder] = useState<string[] | null>(null)
+
+  // When server data arrives (or changes), reset local order to match
+  const serverOrder = useMemo(() => serverSets.map((s) => s.name), [serverSets])
+  const prevServerOrder = useRef<string>(JSON.stringify(serverOrder))
+  useEffect(() => {
+    const key = JSON.stringify(serverOrder)
+    if (key !== prevServerOrder.current) {
+      prevServerOrder.current = key
+      setLocalOrder(null)
+    }
+  }, [serverOrder])
+
+  // Build display list based on localOrder (optimistic) or server order
+  const sets: TestSetDetail[] = useMemo(() => {
+    if (!localOrder) return serverSets
+    const byName = new Map(serverSets.map((s) => [s.name, s]))
+    return localOrder.map((n) => byName.get(n)!).filter(Boolean)
+  }, [localOrder, serverSets])
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+
+  const { mutate: persistOrder } = useMutation({
+    mutationFn: (order: string[]) => reorderTestSets(problem.slug, order),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tests', problem.slug] }),
+    onError: () => {
+      setLocalOrder(null) // revert
+      notifications.show({ message: 'Failed to save test set order', color: 'red' })
+    },
+  })
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string)
+  }, [])
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setActiveDragId(null)
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+      const currentOrder = localOrder ?? sets.map((s) => s.name)
+      const oldIdx = currentOrder.indexOf(active.id as string)
+      const newIdx = currentOrder.indexOf(over.id as string)
+      if (oldIdx === -1 || newIdx === -1) return
+      const newOrder = [...currentOrder]
+      newOrder.splice(oldIdx, 1)
+      newOrder.splice(newIdx, 0, active.id as string)
+      setLocalOrder(newOrder)
+      persistOrder(newOrder)
+    },
+    [localOrder, sets, persistOrder],
+  )
+
+  const handleDragCancel = useCallback(() => {
+    setActiveDragId(null)
+  }, [])
 
   const selectedTestCase = selected
     ? sets
@@ -429,177 +736,45 @@ export default function TestsTab({ problem }: Props) {
 
         <ScrollArea style={{ flex: 1 }}>
           <Box px="md" pb="md">
-            <Accordion
-              multiple
-              defaultValue={sets.map((s) => s.name)}
-              variant="contained"
-              radius="sm"
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
             >
-              {sets.map((set) => (
-                <Accordion.Item key={set.name} value={set.name}>
-                  <Accordion.Control py="xs">
-                    <Group justify="space-between" wrap="nowrap" pr="xs">
-                      <Group gap={6} wrap="nowrap">
-                        <Text
-                          size="sm"
-                          fw={600}
-                          style={{ fontFamily: 'monospace' }}
-                        >
-                          {set.name}
-                        </Text>
-                        {set.config?.points != null && set.config.points > 0 && (
-                          <Badge size="xs" variant="light" color="teal">
-                            {set.config.points}pts
-                          </Badge>
-                        )}
-                      </Group>
-                      <Badge size="xs" color="gray" variant="light">
-                        {set.test_cases.length}
-                      </Badge>
-                    </Group>
-                  </Accordion.Control>
-
-                  <Accordion.Panel p={0}>
-                    <Stack gap={0}>
-                      {/* Generators */}
-                      {set.generators.map((gen) => (
-                        <Group
-                          key={gen.name}
-                          px="sm"
-                          py={5}
-                          justify="space-between"
-                          style={{
-                            borderBottom: '1px solid var(--mantine-color-gray-1)',
-                            background: 'var(--mantine-color-violet-0)',
-                          }}
-                        >
-                          <Group gap={6} wrap="nowrap">
-                            <IconCode size={12} color="var(--mantine-color-violet-6)" />
-                            <Text
-                              size="xs"
-                              style={{ fontFamily: 'monospace' }}
-                              c="violet"
-                            >
-                              {gen.name}
-                            </Text>
-                          </Group>
-                          <Group gap={2} wrap="nowrap">
-                            <Tooltip label="Open in Cursor">
-                              <ActionIcon
-                                size="xs"
-                                variant="subtle"
-                                color="violet"
-                                onClick={() =>
-                                  openGeneratorInEditor(problem.slug, set.name, gen.name)
-                                }
-                              >
-                                <IconCode size={10} />
-                              </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label={genJobId ? 'Generation in progress…' : `Run ${gen.name}`}>
-                              <ActionIcon
-                                size="xs"
-                                variant="subtle"
-                                color="violet"
-                                loading={!!genJobId}
-                                onClick={() =>
-                                  generate({ setName: set.name, genName: gen.name })
-                                }
-                              >
-                                <IconPlayerPlay size={10} />
-                              </ActionIcon>
-                            </Tooltip>
-                          </Group>
-                        </Group>
-                      ))}
-
-                      {/* Test cases */}
-                      {set.test_cases.map((tc) => {
-                        const isSelected =
-                          selected?.setName === set.name &&
-                          selected?.testName === tc.name
-                        return (
-                          <Group
-                            key={tc.name}
-                            px="sm"
-                            py={5}
-                            gap="xs"
-                            wrap="nowrap"
-                            style={{
-                              cursor: 'pointer',
-                              borderBottom: '1px solid var(--mantine-color-gray-1)',
-                              background: isSelected
-                                ? 'var(--mantine-color-blue-0)'
-                                : undefined,
-                            }}
-                            justify="space-between"
-                            onClick={() =>
-                              selectTest(set.name, tc.name, tc.description)
-                            }
-                          >
-                            <Group gap={6} wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
-                              <IconFile
-                                size={12}
-                                color={
-                                  isSelected
-                                    ? 'var(--mantine-color-blue-6)'
-                                    : 'var(--mantine-color-gray-5)'
-                                }
-                                style={{ flexShrink: 0 }}
-                              />
-                              <Text
-                                size="xs"
-                                style={{ fontFamily: 'monospace', minWidth: 0, flex: 1 }}
-                                truncate
-                                c={isSelected ? 'blue' : undefined}
-                              >
-                                {tc.name}
-                              </Text>
-                            </Group>
-                            <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
-                              <Tooltip label="Open in Cursor">
-                                <ActionIcon
-                                  size="xs"
-                                  variant="subtle"
-                                  onClick={() =>
-                                    openTestCaseInEditor(problem.slug, tc.set_name, tc.name)
-                                  }
-                                >
-                                  <IconCode size={12} />
-                                </ActionIcon>
-                              </Tooltip>
-                            </Group>
-                          </Group>
-                        )
-                      })}
-
-                      {set.test_cases.length === 0 && set.generators.length === 0 && (
-                        <Text size="xs" c="dimmed" px="sm" py="xs" fs="italic">
-                          No tests yet
-                        </Text>
-                      )}
-
-                      {/* Add test button */}
-                      <Group
-                        px="xs"
-                        py={4}
-                        style={{ borderTop: '1px solid var(--mantine-color-gray-1)' }}
-                      >
-                        <Button
-                          size="xs"
-                          variant="subtle"
-                          color="gray"
-                          leftSection={<IconPlus size={10} />}
-                          onClick={() => setAddTestSet(set.name)}
-                        >
-                          Add test
-                        </Button>
-                      </Group>
-                    </Stack>
-                  </Accordion.Panel>
-                </Accordion.Item>
-              ))}
-            </Accordion>
+              <SortableContext items={sets.map((s) => s.name)} strategy={verticalListSortingStrategy}>
+                <Accordion
+                  multiple
+                  defaultValue={[]}
+                  variant="contained"
+                  radius="sm"
+                >
+                  {sets.map((set) => (
+                    <SortableTestSetItem
+                      key={set.name}
+                      set={set}
+                      selected={selected}
+                      genJobId={genJobId}
+                      problem={problem}
+                      generate={generate}
+                      selectTest={selectTest}
+                      setAddTestSet={setAddTestSet}
+                      openGeneratorInEditor={openGeneratorInEditor}
+                      openTestCaseInEditor={openTestCaseInEditor}
+                    />
+                  ))}
+                </Accordion>
+              </SortableContext>
+              <DragOverlay dropAnimation={null}>
+                {activeDragId
+                  ? (() => {
+                      const dragSet = sets.find((s) => s.name === activeDragId)
+                      return dragSet ? <TestSetDragPreview set={dragSet} /> : null
+                    })()
+                  : null}
+              </DragOverlay>
+            </DndContext>
           </Box>
         </ScrollArea>
       </Box>

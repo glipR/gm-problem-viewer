@@ -59,6 +59,14 @@ def get_test_sets(problem_path: Path) -> list[TestSet]:
     ):
         test_sets.append(get_test_set(problem_path, set_dir.name))
 
+    # Sort by explicit order (from config), then alphabetically by name
+    test_sets.sort(
+        key=lambda ts: (
+            ts.config.order if ts.config else 0,
+            _natural_key(Path(ts.name)),
+        )
+    )
+
     return test_sets
 
 

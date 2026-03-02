@@ -69,6 +69,7 @@ export interface TestSetConfig {
   description?: string
   points: number
   marking_style: string
+  order?: number
 }
 
 export interface TestGenerator {

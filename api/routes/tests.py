@@ -30,6 +30,7 @@ from api.models.problem import (
     JobStatusResponse,
     OpenGeneratorRequest,
     OpenTestCaseRequest,
+    ReorderTestSetsRequest,
     TestCase,
     TestContentResponse,
     TestSetConfig,
@@ -61,6 +62,31 @@ def list_test_sets(slug: str):
         )
         for ts in sets
     ]
+
+
+@router.put("/reorder")
+def reorder_test_sets(slug: str, req: ReorderTestSetsRequest):
+    """Persist a new ordering for test sets by writing `order` into each config.yaml."""
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+
+    for idx, set_name in enumerate(req.order):
+        set_dir = problem_path / "data" / set_name
+        if not set_dir.exists():
+            continue
+        config_path = set_dir / "config.yaml"
+        if config_path.exists():
+            data = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        else:
+            data = {}
+        data["order"] = idx * 10
+        config_path.write_text(
+            yaml.dump(data, default_flow_style=False, allow_unicode=True)
+        )
+
+    return {"ok": True}
 
 
 @router.post("/generate", response_model=JobResponse)

@@ -10,6 +10,7 @@ class TestSetConfig(BaseModel):
     description: str | None = None
     points: float = 0.0
     marking_style: str = "all_or_nothing"  # "progressive" | "all_or_nothing"
+    order: int = 0
 
 
 class ExportTarget(BaseModel):
@@ -291,6 +292,10 @@ class UpdateTestSetRequest(BaseModel):
     description: str | None = None
     points: float | None = None
     marking_style: str | None = None
+
+
+class ReorderTestSetsRequest(BaseModel):
+    order: list[str]  # test set names in desired order
 
 
 class TestContentResponse(BaseModel):

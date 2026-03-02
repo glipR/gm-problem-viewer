@@ -96,6 +96,10 @@ export async function createTestCase(
   return data
 }
 
+export async function reorderTestSets(slug: string, order: string[]): Promise<void> {
+  await client.put(`/problems/${slug}/tests/reorder`, { order })
+}
+
 export async function updateTestCaseDescription(
   slug: string,
   setName: string,
