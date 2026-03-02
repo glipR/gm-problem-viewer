@@ -1,7 +1,7 @@
 import { Box, Button, Group, Loader, Alert, ScrollArea } from '@mantine/core'
 import { IconAlertTriangle, IconCode } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
-import { Children, createContext, isValidElement, ReactNode, useContext } from 'react'
+import { Children, createContext, isValidElement, ReactNode, useContext, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
@@ -205,6 +205,12 @@ export default function EditorialTab({ slug }: Props) {
                     {children}
                   </summary>
                 ),
+                span: ({ children, className, ...props }) =>
+                  className === 'spoiler' ? (
+                    <Spoiler>{children}</Spoiler>
+                  ) : (
+                    <span className={className} {...props}>{children}</span>
+                  ),
                 div: ({ children, className, ...props }) =>
                   className === 'code-tabs' ? (
                     <CodeTabs>{children}</CodeTabs>
@@ -219,5 +225,31 @@ export default function EditorialTab({ slug }: Props) {
         </ScrollArea>
       )}
     </Box>
+  )
+}
+
+function Spoiler({ children }: { children: ReactNode }) {
+  const [revealed, setRevealed] = useState(false)
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      onClick={() => setRevealed((r) => !r)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') setRevealed((r) => !r)
+      }}
+      style={{
+        cursor: 'pointer',
+        borderRadius: 4,
+        padding: '1px 4px',
+        transition: 'all 0.2s ease',
+        ...(revealed
+          ? { background: 'var(--mantine-color-blue-1)', color: 'inherit' }
+          : { background: 'var(--mantine-color-dark-6)', color: 'transparent' }),
+      }}
+      title={revealed ? 'Click to hide' : 'Click to reveal'}
+    >
+      {children}
+    </span>
   )
 }

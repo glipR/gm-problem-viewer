@@ -62,6 +62,15 @@ def compile_markdown(problem_path: Path, text: str) -> str:
         text = text.replace(
             reconstructed, generate_input_output(problem_path, m[0], m[1], **kwargs)
         )
+
+    # Process ||spoiler|| syntax → clickable spoiler spans
+    text = re.sub(
+        r"\|\|(.+?)\|\|",
+        r'<span class="spoiler">\1</span>',
+        text,
+        flags=re.DOTALL,
+    )
+
     return text
 
 
