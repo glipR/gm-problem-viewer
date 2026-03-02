@@ -11,7 +11,7 @@
 
 You need to think hard and then solve the problems
 
-@code_include[solutions/complete_ac/ac.py]{langs: "py,cpp", rm_config: True}
+@code_include[solutions/complete_ac/sol.py]{langs: "py,cpp", rm_config: True}
 
 </details>
 
@@ -27,6 +27,6 @@ You need to think hard and then solve the problems
 
 You need to think hard and then solve the problems
 
-@code_include[solutions/set_a_ac/ac.py]{langs: "py,cpp", rm_config: True}
+@code_include[solutions/set_a_ac/sol.py]{langs: "py,cpp", rm_config: True}
 
 </details>
