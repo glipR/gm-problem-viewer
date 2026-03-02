@@ -19,6 +19,4 @@ Output the largest element $a_i$ of the list, and also a random element from the
 
 ## Example
 
-:::test_block
-// Markdown snippet to include sample/1.in as an example input
-:::
+@include[sample/1.in][sample/1.out]{title: "Sample Input"}
