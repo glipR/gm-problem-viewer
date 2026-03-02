@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -218,6 +218,53 @@ function AddTestSetModal({
 // Main TestsTab
 // ---------------------------------------------------------------------------
 
+const SIDEBAR_WIDTH_KEY = 'tests-tab-sidebar-width'
+const DEFAULT_SIDEBAR_WIDTH = 320
+const MIN_SIDEBAR_WIDTH = 200
+const MAX_SIDEBAR_WIDTH = 600
+
+function useDraggableSidebar() {
+  const [width, setWidth] = useState(() => {
+    const stored = localStorage.getItem(SIDEBAR_WIDTH_KEY)
+    return stored ? Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, Number(stored))) : DEFAULT_SIDEBAR_WIDTH
+  })
+  const dragging = useRef(false)
+  const startX = useRef(0)
+  const startWidth = useRef(0)
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    dragging.current = true
+    startX.current = e.clientX
+    startWidth.current = width
+
+    const onMouseMove = (ev: MouseEvent) => {
+      if (!dragging.current) return
+      const newWidth = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, startWidth.current + ev.clientX - startX.current))
+      setWidth(newWidth)
+    }
+
+    const onMouseUp = () => {
+      dragging.current = false
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [width])
+
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_WIDTH_KEY, String(width))
+  }, [width])
+
+  return { width, onMouseDown }
+}
+
 export default function TestsTab({ problem }: Props) {
   const [selected, setSelected] = useState<SelectedTest | null>(null)
   const [editDescription, setEditDescription] = useState('')
@@ -312,6 +359,8 @@ export default function TestsTab({ problem }: Props) {
         ?.test_cases.find((t) => t.name === selected.testName)
     : undefined
 
+  const { width: sidebarWidth, onMouseDown: onDragStart } = useDraggableSidebar()
+
   function selectTest(setName: string, testName: string, description?: string) {
     setSelected({ setName, testName })
     setEditDescription(description ?? '')
@@ -324,9 +373,8 @@ export default function TestsTab({ problem }: Props) {
       {/* ------------------------------------------------------------------ */}
       <Box
         style={{
-          width: 320,
+          width: sidebarWidth,
           flexShrink: 0,
-          borderRight: '1px solid var(--mantine-color-gray-2)',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -555,6 +603,20 @@ export default function TestsTab({ problem }: Props) {
           </Box>
         </ScrollArea>
       </Box>
+
+      {/* Drag handle */}
+      <Box
+        onMouseDown={onDragStart}
+        style={{
+          width: 5,
+          flexShrink: 0,
+          cursor: 'col-resize',
+          background: 'var(--mantine-color-gray-2)',
+          transition: 'background 150ms',
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--mantine-color-blue-3)' }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--mantine-color-gray-2)' }}
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* Right panel — test content viewer                                   */}
