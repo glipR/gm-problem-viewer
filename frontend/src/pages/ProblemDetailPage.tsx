@@ -182,6 +182,11 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
             <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace' }}>
               {slug}
             </Text>
+            {problem?.config.contests?.map((c) => (
+              <Badge key={c} size="xs" variant="light" color="grape">
+                {c}
+              </Badge>
+            ))}
           </Group>
 
           {/* Title and basic info */}
