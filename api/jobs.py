@@ -28,6 +28,7 @@ class JobType:
     GENERATE_TESTS = "generate_tests"
     RUN_VALIDATORS = "run_validators"
     RUN_SOLUTION = "run_solution"
+    GENERATE_OUTPUT = "generate_output"
     EXPORT = "export"
     REVIEW_DETERMINISTIC = "review-deterministic"
     REVIEW_AI = "review-ai"

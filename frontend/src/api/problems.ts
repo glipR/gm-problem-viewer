@@ -105,6 +105,11 @@ export async function updateTestCaseDescription(
   await client.patch(`/problems/${slug}/tests/${setName}/${testName}`, { description })
 }
 
+export async function regenerateOutput(slug: string): Promise<{ job_ids: string[] }> {
+  const { data } = await client.post<{ job_ids: string[] }>(`/problems/${slug}/output/regenerate`)
+  return data
+}
+
 export async function runProblem(slug: string): Promise<{ job_ids: string[] }> {
   const { data } = await client.post<{ job_ids: string[] }>(`/problems/${slug}/run`)
   return data

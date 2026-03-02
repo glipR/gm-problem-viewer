@@ -12,6 +12,7 @@ import type { JobStatus } from '../../types/problem'
 
 export enum JobStepType {
   GENERATE_TESTS = 'generate_tests',
+  GENERATE_OUTPUT = 'generate_output',
   RUN_VALIDATORS = 'run_validators',
   RUN_SOLUTION = 'run_solution',
   REVIEW_DETERMINISTIC = 'review-deterministic',
@@ -27,6 +28,10 @@ interface StepConfig {
 const STEP_CONFIG: Record<JobStepType, StepConfig> = {
   [JobStepType.GENERATE_TESTS]: {
     label: 'Generating tests',
+    invalidates: (slug) => [['test-sets', slug]],
+  },
+  [JobStepType.GENERATE_OUTPUT]: {
+    label: 'Generating output files',
     invalidates: (slug) => [['test-sets', slug]],
   },
   [JobStepType.RUN_VALIDATORS]: {

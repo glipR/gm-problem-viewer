@@ -13,7 +13,7 @@ import {
   Loader,
   Stack,
 } from '@mantine/core'
-import { IconPlayerPlay, IconAlertTriangle, IconBrandPython, IconBrandCpp, IconQuestionMark, IconCode } from '@tabler/icons-react'
+import { IconPlayerPlay, IconAlertTriangle, IconBrandPython, IconBrandCpp, IconQuestionMark, IconCode, IconRefresh } from '@tabler/icons-react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
 import type {
@@ -23,7 +23,7 @@ import type {
   SolutionRunResult,
   Verdict,
 } from '../../types/problem'
-import { runSolutions, getMergedResults, openSolutionInEditor } from '../../api/problems'
+import { runSolutions, getMergedResults, openSolutionInEditor, regenerateOutput } from '../../api/problems'
 import { useJobPoller } from '../../hooks/useJobPoller'
 
 interface Props {
@@ -329,6 +329,26 @@ export default function SolutionsTab({ problem }: Props) {
     setActiveRun({ jobId, paths })
   }
 
+  const [regenJobId, setRegenJobId] = useState<string | null>(null)
+  useJobPoller(regenJobId, {
+    onDone: (job: JobStatus) => {
+      if (job.status === 'done') {
+        notifications.show({ message: 'Output files regenerated', color: 'green' })
+      } else {
+        notifications.show({ message: 'Failed to regenerate output', color: 'red' })
+      }
+      setRegenJobId(null)
+      qc.invalidateQueries({ queryKey: ['test-sets', problem.slug] })
+    },
+  })
+
+  const { mutate: regenOutput, isPending: regenPending } = useMutation({
+    mutationFn: () => regenerateOutput(problem.slug),
+    onSuccess: (data) => setRegenJobId(data.job_ids[0]),
+    onError: () =>
+      notifications.show({ message: 'Failed to start output regeneration', color: 'red' }),
+  })
+
   const { mutate: runAll, isPending: runAllPending } = useMutation({
     mutationFn: () =>
       runSolutions(problem.slug, {
@@ -356,14 +376,25 @@ export default function SolutionsTab({ problem }: Props) {
   return (
     <Box p="xl">
       <Group mb="md" justify="space-between">
-        <Button
-          size="xs"
-          leftSection={<IconPlayerPlay size={14} />}
-          loading={runAllPending}
-          onClick={() => runAll()}
-        >
-          Run All Solutions
-        </Button>
+        <Group gap="xs">
+          <Button
+            size="xs"
+            leftSection={<IconPlayerPlay size={14} />}
+            loading={runAllPending}
+            onClick={() => runAll()}
+          >
+            Run All Solutions
+          </Button>
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<IconRefresh size={14} />}
+            loading={regenPending || regenJobId !== null}
+            onClick={() => regenOutput()}
+          >
+            Regenerate Output
+          </Button>
+        </Group>
         {(mergedLoading || jobIsRunning) && (
           <Group gap="xs">
             <Loader size="xs" />

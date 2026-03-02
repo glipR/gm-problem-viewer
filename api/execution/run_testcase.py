@@ -154,11 +154,19 @@ def run_individual_testcase(
             time_ms=0,  # TODO
             comment=result.stderr,
         )
-    # Get result against candidate solution
-    judge_sol = get_candidate_solution(problem_path)
-    judge_result = output_individual_testcase(
-        problem_path, problem, judge_sol, test_case
-    )
+    # Get expected output: prefer cached .out file, fall back to running candidate
+    in_path = test_case.full_path(problem_path)
+    out_path = in_path.with_suffix(".out")
+    if out_path.exists():
+        expected_stdout = out_path.read_text().rstrip("\n")
+    else:
+        judge_sol = get_candidate_solution(problem_path)
+        judge_result = output_individual_testcase(
+            problem_path, problem, judge_sol, test_case
+        )
+        expected_stdout = judge_result.stdout
+        # Cache the output for future runs
+        out_path.write_text(expected_stdout.strip() + "\n")
     if problem.validators.output:
         # Output validator, check against the result output.
         result = run_output_validator_standard(
@@ -166,7 +174,7 @@ def run_individual_testcase(
             problem.validators.output,
             test_case,
             result.stdout,
-            judge_result.stdout,
+            expected_stdout,
         )
         return Verdict(
             test_case=test_case.name,
@@ -177,7 +185,7 @@ def run_individual_testcase(
         )
     else:
         # Just do diff
-        same = result.stdout.strip() == judge_result.stdout.strip()
+        same = result.stdout.strip() == expected_stdout.strip()
         return Verdict(
             test_case=test_case.name,
             test_set=test_case.set_name,

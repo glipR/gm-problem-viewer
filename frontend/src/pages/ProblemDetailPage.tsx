@@ -52,7 +52,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function ProblemDetailPage({ slug, onBack }: Props) {
   const qc = useQueryClient()
-  const [runJobIds, setRunJobIds] = useState<[string, string, string] | null>(null)
+  const [runJobIds, setRunJobIds] = useState<string[] | null>(null)
   const [reviewJobId, setReviewJobId] = useState<string | null>(null)
   const [aiReviewJobId, setAiReviewJobId] = useState<string | null>(null)
   const { progress: reviewProgress, color: reviewColor, issues: reviewIssues, byCategory } = useReviewProgress(slug)
@@ -69,11 +69,11 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
   const { mutate: run, isPending: runPending } = useMutation({
     mutationFn: () => runProblem(slug),
     onSuccess: (data) => {
-      // Job IDs are test generation, validation, and solution runs.
+      // Job IDs: generate tests, generate output, generate tests (2nd), validators, solutions
       setActiveTestsRun(data.job_ids[0])
-      setActiveValidatorRun(data.job_ids[1])
-      setActiveSolutionRun(data.job_ids[2])
-      setRunJobIds(data.job_ids as [string, string, string])
+      setActiveValidatorRun(data.job_ids[3])
+      setActiveSolutionRun(data.job_ids[4])
+      setRunJobIds(data.job_ids)
     },
     onError: () => notifications.show({ message: 'Run not yet implemented', color: 'orange' }),
   })
@@ -408,8 +408,10 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
           key={runJobIds.join(',')}
           steps={[
             { jobId: runJobIds[0], type: JobStepType.GENERATE_TESTS },
-            { jobId: runJobIds[1], type: JobStepType.RUN_VALIDATORS },
-            { jobId: runJobIds[2], type: JobStepType.RUN_SOLUTION },
+            { jobId: runJobIds[1], type: JobStepType.GENERATE_OUTPUT },
+            { jobId: runJobIds[2], type: JobStepType.GENERATE_TESTS },
+            { jobId: runJobIds[3], type: JobStepType.RUN_VALIDATORS },
+            { jobId: runJobIds[4], type: JobStepType.RUN_SOLUTION },
           ]}
           slug={slug}
           onDone={() => setRunJobIds(null)}
