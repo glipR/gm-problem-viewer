@@ -1,17 +1,20 @@
-"""Editorial router — serve a problem's editorial.md."""
+"""Editorial router — serve and review a problem's editorial.md."""
 
 from __future__ import annotations
 
 import subprocess
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 
+from api.checks.ai_checks import check_editorial_spelling
 from api.collection.editorial import (
     get_editorial as col_get_editorial,
     compile_editorial,
 )
 from api.config import get_settings
-from api.models.problem import StatementResponse
+from api.execution.run_ai_checks import run_single_ai_check_job
+from api.jobs import JobType, create_job
+from api.models.problem import JobResponse, StatementResponse
 
 router = APIRouter(prefix="/problems/{slug}", tags=["editorial"])
 
@@ -43,3 +46,25 @@ def open_editorial_in_editor(slug: str):
         raise HTTPException(status_code=404, detail="editorial.md not found")
     subprocess.Popen(["cursor", str(settings.problems_root), str(editorial_path)])
     return {"ok": True}
+
+
+@router.post("/editorial/review", response_model=JobResponse)
+def review_editorial(slug: str, bg: BackgroundTasks):
+    """
+    Enqueue an AI grammar/clarity review of the problem editorial.
+    Returns a job_id to poll via GET /jobs/{job_id}.
+    """
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+
+    job_id = create_job(slug, JobType.REVIEW_EDITORIAL)
+    bg.add_task(
+        run_single_ai_check_job,
+        problem_path,
+        job_id,
+        "Editorial Spelling",
+        check_editorial_spelling,
+    )
+    return JobResponse(job_ids=[job_id])

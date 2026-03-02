@@ -6,14 +6,17 @@ from __future__ import annotations
 
 import subprocess
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse
 
+from api.checks.ai_checks import check_statement_spelling
 from api.collection.statement import (
     get_statement as col_get_statement,
     compile_statement,
 )
 from api.config import get_settings
+from api.execution.run_ai_checks import run_single_ai_check_job
+from api.jobs import JobType, create_job
 from api.models.problem import JobResponse, StatementResponse
 
 router = APIRouter(prefix="/problems/{slug}", tags=["statement"])
@@ -51,13 +54,26 @@ def open_statement_in_editor(slug: str):
 
 
 @router.post("/statement/review", response_model=JobResponse)
-def review_statement(slug: str):
+def review_statement(slug: str, bg: BackgroundTasks):
     """
     Enqueue an AI grammar/clarity review of the problem statement.
     Returns a job_id to poll via GET /jobs/{job_id}.
     The job result contains suggested edits as plain text.
     """
-    raise HTTPException(status_code=501, detail="Not implemented")
+    settings = get_settings()
+    problem_path = settings.problems_root / slug
+    if not problem_path.exists():
+        raise HTTPException(status_code=404, detail=f"Problem '{slug}' not found")
+
+    job_id = create_job(slug, JobType.REVIEW_STATEMENT)
+    bg.add_task(
+        run_single_ai_check_job,
+        problem_path,
+        job_id,
+        "Statement Spelling",
+        check_statement_spelling,
+    )
+    return JobResponse(job_ids=[job_id])
 
 
 @router.get("/files/{filepath:path}")

@@ -4,7 +4,7 @@ import { useJobPoller } from '../../hooks/useJobPoller'
 import type { AiReviewCheck, AiReviewResult } from '../../types/problem'
 
 /** The 5 checks in execution order — used to show pending placeholders. */
-const ALL_CHECK_NAMES = [
+const DEFAULT_CHECK_NAMES = [
   'Output Validator Alignment',
   'Input Validator Coverage',
   'Boundary Test Coverage',
@@ -16,9 +16,12 @@ interface Props {
   jobId: string
   slug: string
   onClose: () => void
+  /** Override the list of expected check names (defaults to the full AI review set). */
+  checkNames?: string[]
 }
 
-export function AiReviewDialog({ jobId, slug, onClose }: Props) {
+export function AiReviewDialog({ jobId, slug, onClose, checkNames }: Props) {
+  const allCheckNames = checkNames ?? DEFAULT_CHECK_NAMES
   const { data: job } = useJobPoller(jobId)
 
   const result = job?.result as AiReviewResult | undefined
@@ -43,13 +46,13 @@ export function AiReviewDialog({ jobId, slug, onClose }: Props) {
       centered
     >
       <Stack gap="sm">
-        {ALL_CHECK_NAMES.map((name) => {
+        {allCheckNames.map((name) => {
           const check = completedChecks.find((c) => c.name === name)
           const isRunning =
             !completedNames.has(name) &&
             !isDone &&
             !isFailed &&
-            completedChecks.length === ALL_CHECK_NAMES.indexOf(name)
+            completedChecks.length === allCheckNames.indexOf(name)
 
           return (
             <div key={name}>
@@ -82,7 +85,7 @@ export function AiReviewDialog({ jobId, slug, onClose }: Props) {
                   )}
                 </div>
               </Group>
-              {name !== ALL_CHECK_NAMES[ALL_CHECK_NAMES.length - 1] && (
+              {name !== allCheckNames[allCheckNames.length - 1] && (
                 <Divider mt="sm" />
               )}
             </div>

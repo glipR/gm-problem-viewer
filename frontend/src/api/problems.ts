@@ -220,6 +220,16 @@ export async function openEditorialInEditor(slug: string): Promise<void> {
   await client.post(`/problems/${slug}/editorial/open`)
 }
 
+export async function reviewStatement(slug: string): Promise<{ job_ids: string[] }> {
+  const { data } = await client.post<{ job_ids: string[] }>(`/problems/${slug}/statement/review`)
+  return data
+}
+
+export async function reviewEditorial(slug: string): Promise<{ job_ids: string[] }> {
+  const { data } = await client.post<{ job_ids: string[] }>(`/problems/${slug}/editorial/review`)
+  return data
+}
+
 export async function exportProblem(slug: string, target: string): Promise<{ job_ids: string[] }> {
   const { data } = await client.post<{ job_ids: string[] }>(`/problems/${slug}/export/`, { target })
   return data

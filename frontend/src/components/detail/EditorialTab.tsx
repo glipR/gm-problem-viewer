@@ -1,18 +1,28 @@
+import { useState } from 'react'
 import { Box, Button, Group, Loader, Alert } from '@mantine/core'
-import { IconAlertTriangle, IconCode } from '@tabler/icons-react'
-import { useQuery } from '@tanstack/react-query'
-import { getEditorial, openEditorialInEditor } from '../../api/problems'
+import { IconBrain, IconAlertTriangle, IconCode } from '@tabler/icons-react'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { getEditorial, openEditorialInEditor, reviewEditorial } from '../../api/problems'
 import ProblemMarkdown, { editorialComponents } from './ProblemMarkdown'
+import { AiReviewDialog } from './AiReviewDialog'
 
 interface Props {
   slug: string
 }
 
 export default function EditorialTab({ slug }: Props) {
+  const queryClient = useQueryClient()
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['editorial', slug],
     queryFn: () => getEditorial(slug),
     retry: false,
+  })
+
+  const [reviewJobId, setReviewJobId] = useState<string | null>(null)
+
+  const { mutate: startReview, isPending: reviewPending } = useMutation({
+    mutationFn: () => reviewEditorial(slug),
+    onSuccess: (data) => setReviewJobId(data.job_ids[0]),
   })
 
   const status = (error as { response?: { status?: number } } | null)?.response?.status
@@ -31,7 +41,29 @@ export default function EditorialTab({ slug }: Props) {
         >
           Open in Cursor
         </Button>
+        <Button
+          size="xs"
+          variant="light"
+          color="violet"
+          leftSection={<IconBrain size={14} />}
+          loading={reviewPending}
+          onClick={() => startReview()}
+        >
+          Review with Claude
+        </Button>
       </Group>
+
+      {reviewJobId && (
+        <AiReviewDialog
+          jobId={reviewJobId}
+          slug={slug}
+          checkNames={['Editorial Spelling']}
+          onClose={() => {
+            setReviewJobId(null)
+            queryClient.invalidateQueries({ queryKey: ['editorial', slug] })
+          }}
+        />
+      )}
 
       {isLoading && <Loader size="sm" />}
 

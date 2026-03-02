@@ -22,7 +22,11 @@ logger = logging.getLogger(__name__)
 def run_claude(prompt: str, cwd: Path, timeout: int = 120) -> str:
     """Run the ``claude`` CLI with *prompt* and return its stdout."""
     result = subprocess.run(
-        ["claude", "-p", prompt, "--output-format", "text"],
+        [
+            "claude", "-p", prompt,
+            "--output-format", "text",
+            "--allowedTools", "Edit", "Write", "Read", "Glob", "Grep",
+        ],
         cwd=cwd,
         capture_output=True,
         text=True,
@@ -283,6 +287,38 @@ Do NOT edit any files. Just analyze.
 
 Respond with ONLY a single sentence summarizing your assessment of solution optimality. 
 You may assume the user is a competitive programming expert and understands most algorithm types. Do not include any other text."""
+
+    return run_claude(prompt, cwd=problem_path)
+
+
+# ---------------------------------------------------------------------------
+# 6. Editorial spelling/grammar
+# ---------------------------------------------------------------------------
+
+
+def check_editorial_spelling(problem_path: Path) -> str:
+    """Fix spelling and grammar issues in editorial.md."""
+    editorial = _read_if_exists(problem_path / "editorial.md")
+    if not editorial or not editorial.strip():
+        return "Editorial is empty; nothing to check."
+
+    prompt = f"""You are proofreading a competitive programming problem editorial.
+
+The file is `editorial.md` in the current directory.
+
+Editorial:
+{editorial}
+
+Your task: Fix any spelling or grammar issues in `editorial.md`. Rules:
+- Fix typos, grammatical errors, and awkward phrasing
+- Do NOT change LaTeX math expressions (anything between $ or $$), unless this seems logically incorrect.
+- Do NOT change the meaning or technical content
+- Do NOT reformat or restructure the document
+- Preserve all markdown directives
+
+If the editorial has no issues, do NOT edit the file.
+
+After your analysis, respond with ONLY a single sentence summarizing what you found or changed. Do not include any other text."""
 
     return run_claude(prompt, cwd=problem_path)
 
