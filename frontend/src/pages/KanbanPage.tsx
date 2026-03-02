@@ -1,4 +1,5 @@
 import { Box, Center, Loader, Text, Title } from '@mantine/core'
+import { useNavigate } from 'react-router-dom'
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { useProblems, usePatchProblemState } from '../hooks/useProblems'
@@ -6,11 +7,8 @@ import { useProblemsStore } from '../store/problemsStore'
 import KanbanBoard from '../components/kanban/KanbanBoard'
 import type { Problem } from '../types/problem'
 
-interface Props {
-  onProblemClick: (slug: string) => void
-}
-
-export default function KanbanPage({ onProblemClick }: Props) {
+export default function KanbanPage() {
+  const navigate = useNavigate()
   const { data: problems, isLoading, isError } = useProblems()
   const { mutate: patchState } = usePatchProblemState()
   const { overrides, setOverride, clearOverride } = useProblemsStore()
@@ -60,7 +58,7 @@ export default function KanbanPage({ onProblemClick }: Props) {
         Problems
       </Title>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <KanbanBoard problems={displayProblems} onProblemClick={onProblemClick} />
+        <KanbanBoard problems={displayProblems} onProblemClick={(slug) => navigate(`/problems/${slug}`)} />
       </DndContext>
     </Box>
   )

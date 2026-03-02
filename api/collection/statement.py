@@ -17,9 +17,7 @@ LANG_LABELS = {
 }
 
 # Regex to strip YAML frontmatter from solution files ("""---\n...\n---\n...""")
-FRONTMATTER_RE = re.compile(
-    r'^("""|/\*)\s*---\n.*?---\n.*?(\1|(\*/))', flags=re.DOTALL
-)
+FRONTMATTER_RE = re.compile(r'^("""|/\*)\s*---\n.*?---\n.*?(\1|(\*/))', flags=re.DOTALL)
 
 
 def get_statement(problem_path: Path) -> str | None:
@@ -86,18 +84,27 @@ def _strip_frontmatter(code: str) -> str:
     """Remove YAML frontmatter block from solution source code."""
     m = FRONTMATTER_RE.match(code)
     if m:
-        code = code[m.end():]
+        code = code[m.end() :]
     return code.lstrip("\n")
 
 
 def _lang_code_syntax(ext: str) -> str:
     """Map file extension to a syntax-highlight language name for HTML class."""
-    mapping = {"py": "python", "cpp": "cpp", "java": "java", "js": "javascript",
-               "c": "c", "rs": "rust", "go": "go"}
+    mapping = {
+        "py": "python",
+        "cpp": "cpp",
+        "java": "java",
+        "js": "javascript",
+        "c": "c",
+        "rs": "rust",
+        "go": "go",
+    }
     return mapping.get(ext, ext)
 
 
-def generate_code_include(problem_path: Path, file_path: str, langs: str = "", rm_config: bool = False) -> str:
+def generate_code_include(
+    problem_path: Path, file_path: str, langs: str = "", rm_config: bool = False
+) -> str:
     """
     Generate an HTML code-tabs block for one or more language variants of a file.
 
@@ -117,20 +124,20 @@ def generate_code_include(problem_path: Path, file_path: str, langs: str = "", r
     parts = []
     for ext in extensions:
         variant = parent / f"{stem}.{ext}"
+        label = LANG_LABELS.get(ext, ext)
+        syntax = _lang_code_syntax(ext)
         if not variant.exists():
             continue
         code = variant.read_text(encoding="utf-8")
         if rm_config:
             code = _strip_frontmatter(code)
-        label = LANG_LABELS.get(ext, ext)
-        syntax = _lang_code_syntax(ext)
         b64 = base64.b64encode(code.rstrip("\n").encode()).decode()
         parts.append(
             f'<pre data-lang="{ext}" data-label="{label}" data-syntax="{syntax}" data-code="{b64}"></pre>'
         )
 
     if not parts:
-        return f"<!-- @code_include: no files found for {file_path} -->"
+        return f'<div class="code-error">File {file_path} not found!</div>'
 
     return '<div class="code-tabs">' + "\n".join(parts) + "</div>"
 

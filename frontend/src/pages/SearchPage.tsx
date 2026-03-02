@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Box, Button, Center, Group, Loader, MultiSelect, Select, SimpleGrid, Text, TextInput, Title } from '@mantine/core'
 import { IconSearch, IconListCheck } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
@@ -7,11 +8,9 @@ import { reviewProblem } from '../api/problems'
 import { useProblems, useSearchProblems } from '../hooks/useProblems'
 import StaticProblemCard from '../components/kanban/StaticProblemCard'
 
-interface Props {
-  onProblemClick: (slug: string) => void
-}
-
-export default function SearchPage({ onProblemClick }: Props) {
+export default function SearchPage() {
+  const navigate = useNavigate()
+  const onProblemClick = (slug: string) => navigate(`/problems/${slug}`)
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])

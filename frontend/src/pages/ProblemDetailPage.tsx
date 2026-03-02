@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box,
   Group,
@@ -38,11 +39,6 @@ import { useReviewProgress } from '../hooks/useReviewProgress'
 import { useJobPoller } from '../hooks/useJobPoller'
 import type { JobStatus } from '../types/problem'
 
-interface Props {
-  slug: string
-  onBack: () => void
-}
-
 const STATUS_COLORS: Record<string, string> = {
   pending: 'gray',
   running: 'blue',
@@ -50,7 +46,11 @@ const STATUS_COLORS: Record<string, string> = {
   failed: 'red',
 }
 
-export default function ProblemDetailPage({ slug, onBack }: Props) {
+export default function ProblemDetailPage() {
+  const { slug: slugParam } = useParams<{ slug: string }>()
+  const slug = slugParam!
+  const navigate = useNavigate()
+  const [initialTab] = useState(() => new URLSearchParams(window.location.search).get('tab') ?? 'statement')
   const qc = useQueryClient()
   const [runJobIds, setRunJobIds] = useState<string[] | null>(null)
   const [reviewJobId, setReviewJobId] = useState<string | null>(null)
@@ -176,7 +176,7 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
         <Stack gap="sm" pb="md">
           {/* Back + slug breadcrumb */}
           <Group gap="xs">
-            <ActionIcon variant="subtle" color="gray" onClick={onBack} size="sm">
+            <ActionIcon variant="subtle" color="gray" onClick={() => navigate('/')} size="sm">
               <IconArrowLeft size={16} />
             </ActionIcon>
             <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace' }}>
@@ -331,7 +331,11 @@ export default function ProblemDetailPage({ slug, onBack }: Props) {
       {/* Tabs                                                                 */}
       {/* ------------------------------------------------------------------ */}
       <Tabs
-        defaultValue="statement"
+        defaultValue={initialTab}
+        onChange={(tab) => {
+          const url = tab && tab !== 'statement' ? `?tab=${tab}` : window.location.pathname
+          window.history.replaceState(null, '', url)
+        }}
         style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
       >
         <Tabs.List px="xl" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}>
