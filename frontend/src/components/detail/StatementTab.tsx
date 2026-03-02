@@ -8,6 +8,7 @@ import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
 import 'katex/dist/katex.min.css'
 import { getStatement, openStatementInEditor } from '../../api/problems'
+import CodeTabs from './CodeTabs'
 
 const InPreContext = createContext(false)
 
@@ -174,6 +175,12 @@ export default function StatementTab({ slug }: Props) {
                     {children}
                   </td>
                 ),
+                div: ({ children, className, ...props }) =>
+                  className === 'code-tabs' ? (
+                    <CodeTabs>{children}</CodeTabs>
+                  ) : (
+                    <div className={className} {...props}>{children}</div>
+                  ),
               }}
             >
               {data.raw}
