@@ -123,7 +123,14 @@ export default function EditorialTab({ slug }: Props) {
                     src && !src.startsWith('http') && !src.startsWith('/')
                       ? `/api/problems/${slug}/files/${src}`
                       : src
-                  return <img src={resolvedSrc} alt={alt} style={{ maxWidth: '100%' }} {...props} />
+                  let displayAlt = alt || ''
+                  let width: string | undefined
+                  const widthMatch = displayAlt.match(/\|width=([^\]|]+)$/)
+                  if (widthMatch) {
+                    width = widthMatch[1].trim()
+                    displayAlt = displayAlt.slice(0, widthMatch.index).trim()
+                  }
+                  return <img src={resolvedSrc} alt={displayAlt} style={{ maxWidth: '100%', width }} {...props} />
                 },
                 table: ({ children }) => (
                   <table
