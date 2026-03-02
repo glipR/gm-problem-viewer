@@ -1,7 +1,7 @@
 import { Box, Button, Group, Loader, Alert, ScrollArea } from '@mantine/core'
 import { IconAlertTriangle, IconCode } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
-import { createContext, useContext } from 'react'
+import { Children, createContext, isValidElement, ReactNode, useContext } from 'react'
 import Markdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
@@ -161,6 +161,49 @@ export default function EditorialTab({ slug }: Props) {
                   >
                     {children}
                   </td>
+                ),
+                details: ({ children, ...props }) => {
+                  const childArray = Children.toArray(children) as ReactNode[]
+                  const summaryChild = childArray[0]
+                  const rest = childArray.slice(1)
+                  return (
+                    <details
+                      {...props}
+                      style={{
+                        background: 'var(--mantine-color-blue-6)',
+                        borderRadius: 8,
+                        marginBottom: 12,
+                        paddingBottom: 2,
+                      }}
+                    >
+                      {summaryChild}
+                      <div
+                        style={{
+                          background: 'var(--mantine-color-blue-1)',
+                          borderRadius: 6,
+                          padding: '10px 14px',
+                          margin: '0 4px 4px 4px',
+                        }}
+                      >
+                        {rest}
+                      </div>
+                    </details>
+                  )
+                },
+                summary: ({ children, ...props }) => (
+                  <summary
+                    {...props}
+                    style={{
+                      padding: '8px 14px',
+                      cursor: 'pointer',
+                      fontFamily: 'system-ui, sans-serif',
+                      fontWeight: 600,
+                      fontSize: 14,
+                      color: 'white',
+                    }}
+                  >
+                    {children}
+                  </summary>
                 ),
                 div: ({ children, className, ...props }) =>
                   className === 'code-tabs' ? (
