@@ -70,7 +70,8 @@ export default function StatementTab({ slug }: Props) {
         <ScrollArea>
           <Box
             style={{
-              maxWidth: 740,
+              maxWidth: 900,
+              margin: '0 auto',
               fontFamily: '"STIX Two Text", Georgia, serif',
               lineHeight: 1.75,
               fontSize: 15,
