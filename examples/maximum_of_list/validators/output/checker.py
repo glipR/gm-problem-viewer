@@ -1,8 +1,8 @@
 def make_result(code: str, points: float, comment: str):
-    pass
+    return (code, points, comment)
 
 
-def check(input_data: str, process_data: str, judge_data: str, points: float):
+def judge(input_data: str, process_data: str, judge_data: str, points: float):
     n = int(input_data.split("\n")[0])
     a = list(map(int, input_data.split("\n")[1].split()))
     m = max(a)

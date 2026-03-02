@@ -5,7 +5,7 @@ rand_count = 0
 
 random.seed(764819273812)
 
-MAX_N = 10**6
+MAX_N = 10**5
 MAX_A = 10**8
 
 

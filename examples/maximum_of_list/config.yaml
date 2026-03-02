@@ -2,9 +2,9 @@ author: Jackson Goerner
 difficulty: 800
 export_config:
   mcpc-problems:
-    location: ~/Desktop/problemtools
-    problemtools_config: {}
-    type: problemtools
+    location: ~/Desktop/mcpc-problems/problems
+    dmoj_config: {}
+    type: dmoj
 limits:
   memory: 262144
   time: 1
