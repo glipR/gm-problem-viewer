@@ -47,6 +47,7 @@ int main() {
             if (q == "YES") {
                 return 0;
             } else if (q == "HIGHER") {
+                digits[i] ++;
                 continue;
             } else if (q == "LOWER") {
                 digits[i] = v - 1;

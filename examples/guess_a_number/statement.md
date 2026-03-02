@@ -27,7 +27,7 @@ For test set A, you will have 51 queries to guess the number
 
 ## Test Set B (50 points)
 
-For test set B, you will have 15 queries to guess the number
+For test set B, you will have 16 queries to guess the number
 
 ## Example Interaction
 

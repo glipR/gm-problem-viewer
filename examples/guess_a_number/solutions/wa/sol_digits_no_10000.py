@@ -1,5 +1,5 @@
 """---
-name:  Set A WA
+name:  Digits - no 10000
 expectation:
   sample: AC
   setA: WA
@@ -22,6 +22,7 @@ for i in range(5):
         if q == "YES":
             sys.exit(0)
         elif q == "HIGHER":
+            digits[i] += 1
             continue
         elif q == "LOWER":
             digits[i] = v - 1

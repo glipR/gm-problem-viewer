@@ -1,12 +1,9 @@
 import random
-from testlibpy import write_test_case
+from testlibpy import test_case
 
 random.seed(19283718273)
 
 
-def write_random():
-    write_test_case(f"{random.randint(1, 100000)} 51", rpt_name="rand-")
-
-
 for _ in range(10):
-    write_random()
+    with test_case(rpt_name="rand-") as w:
+        w.write_line(f"{random.randint(1, 100000)} 51")

@@ -9,7 +9,7 @@ Approach - standard binary search. But it ignores 100000 as an option.
 """
 
 l = 1
-r = 100000
+r = 99999
 
 while True:
     mid = (l + r) // 2

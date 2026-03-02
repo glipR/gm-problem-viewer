@@ -3,14 +3,19 @@ name: Judge
 description: Plays the higher/lower game.
 ---
 """
+
+
 def read_line():
     pass
+
 
 def write_line(s: str):
     pass
 
+
 def make_result(code: str, points: float, comment: str):
     pass
+
 
 def grade(input_file: str, points: float):
     x, q = list(map(int, input_file.split("\n")[0].split()))
@@ -26,4 +31,4 @@ def grade(input_file: str, points: float):
             write_line("HIGHER")
         elif d > x:
             write_line("LOWER")
-            return make_result("WA", 0, f"Failed to guess the number after {q} querues.")
+    return make_result("WA", 0, f"Failed to guess the number after {q} queries.")
