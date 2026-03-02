@@ -26,7 +26,10 @@ export default function StatementTab({ slug }: Props) {
   const status = (error as { response?: { status?: number } } | null)?.response?.status
 
   return (
-    <Box p="xl">
+    <Box p="xl" style={{
+      maxWidth: 900,
+      margin: '0 auto',
+    }}>
       <Group mb="lg">
         <Button
           size="xs"
@@ -70,9 +73,7 @@ export default function StatementTab({ slug }: Props) {
         <ScrollArea>
           <Box
             style={{
-              maxWidth: 900,
-              margin: '0 auto',
-              fontFamily: '"STIX Two Text", Georgia, serif',
+              fontFamily: '"Helvetica Neue", Georgia, serif',
               lineHeight: 1.75,
               fontSize: 15,
             }}

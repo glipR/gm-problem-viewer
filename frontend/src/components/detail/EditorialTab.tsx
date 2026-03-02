@@ -1,7 +1,7 @@
 import { Box, Button, Group, Loader, Alert, ScrollArea } from '@mantine/core'
 import { IconAlertTriangle, IconCode } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
-import { Children, createContext, isValidElement, ReactNode, useContext, useState } from 'react'
+import { Children, createContext, type ReactNode, useContext, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
@@ -26,7 +26,10 @@ export default function EditorialTab({ slug }: Props) {
   const status = (error as { response?: { status?: number } } | null)?.response?.status
 
   return (
-    <Box p="xl">
+    <Box p="xl" style={{
+      maxWidth: 900,
+      margin: '0 auto',
+    }}>
       <Group mb="lg">
         <Button
           size="xs"
@@ -57,9 +60,7 @@ export default function EditorialTab({ slug }: Props) {
         <ScrollArea>
           <Box
             style={{
-              maxWidth: 900,
-              margin: '0 auto',
-              fontFamily: '"STIX Two Text", Georgia, serif',
+              fontFamily: '"Helvetica Neue", Georgia, serif',
               lineHeight: 1.75,
               fontSize: 15,
             }}
