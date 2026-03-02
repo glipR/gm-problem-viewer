@@ -111,7 +111,7 @@ def run_output_validator_standard(
     spec.loader.exec_module(module)
     module.make_result = capturing_make_result
     try:
-        captured = module.check(input_data, process_output, judge_output, 1.0)
+        captured = module.judge(input_data, process_output, judge_output, 1.0)
     except Exception as e:
         import traceback
 

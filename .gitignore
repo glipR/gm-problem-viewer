@@ -3,3 +3,5 @@
 uv.lock
 .cache/
 config.yaml
+
+!examples/**/config.yaml

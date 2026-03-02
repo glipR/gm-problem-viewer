@@ -73,9 +73,13 @@ def export_dmoj(
         content = output.full_path(problem_path).read_text("utf-8")
         new_name = output.path[len("output/") :]
         new_loc = export_problem_dir / new_name
-        # TODO: Transform checkers/judges for DMOJ judging
         if problem.config.type == "standard":
+            # This is a checker with a def judge function.
+            # We need to write a custom check function to align with DMOJ.
+            check_template = Path(__file__).parent / "check_template.py"
+            content = content + "\n\n" + check_template.read_text("utf-8")
             init_yml["checker"] = new_name
+        # TODO: Transform checkers/judges for DMOJ judging
         elif problem.config.type == "interactive":
             init_yml["custom_judge"] = new_name
         elif problem.config.type == "multi":
@@ -106,7 +110,10 @@ def export_dmoj(
                 }
             )
         init_yml["test_cases"].append(
-            {"batched": batch, "points": test_set.config.points}
+            {
+                "batched": batch,
+                "points": test_set.config.points if test_set.config else 100,
+            }
         )
 
     ## Generate output files if needed
@@ -125,7 +132,7 @@ def export_dmoj(
                 new_loc.parent.mkdir(parents=True, exist_ok=True)
                 new_loc.write_text(judge_result.stdout.strip(), "utf-8")
 
-    ## TODO: Compile the test generator scripts to work locally.
+    ## TODO: Compile the test generator scripts to work locally. (For DMOJ - may need to change imports)
 
     ## init.yml creation
     on_status("Creating init.yml...")
