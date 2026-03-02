@@ -489,7 +489,7 @@ export default function TestsTab({ problem }: Props) {
                               selectTest(set.name, tc.name, tc.description)
                             }
                           >
-                            <Group gap={6} wrap="nowrap">
+                            <Group gap={6} wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
                               <IconFile
                                 size={12}
                                 color={
@@ -501,28 +501,25 @@ export default function TestsTab({ problem }: Props) {
                               />
                               <Text
                                 size="xs"
-                                style={{ fontFamily: 'monospace', minWidth: 0 }}
+                                style={{ fontFamily: 'monospace', minWidth: 0, flex: 1 }}
                                 truncate
                                 c={isSelected ? 'blue' : undefined}
                               >
                                 {tc.name}
                               </Text>
-                              {tc.description && (
-                                <Text size="xs" c="dimmed" truncate style={{ opacity: 0.7 }}>
-                                  {tc.description}
-                                </Text>
-                              )}
                             </Group>
-                            <Group gap={2} wrap="nowrap">
-                            <Tooltip label="Open in Cursor">
-                              <ActionIcon
-                                size="xs"
-                                variant="subtle"
-                                onClick={() => openTestCaseInEditor(problem.slug, tc.set_name, tc.name)}
-                              >
-                                <IconCode size={12} />
-                              </ActionIcon>
-                            </Tooltip>
+                            <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
+                              <Tooltip label="Open in Cursor">
+                                <ActionIcon
+                                  size="xs"
+                                  variant="subtle"
+                                  onClick={() =>
+                                    openTestCaseInEditor(problem.slug, tc.set_name, tc.name)
+                                  }
+                                >
+                                  <IconCode size={12} />
+                                </ActionIcon>
+                              </Tooltip>
                             </Group>
                           </Group>
                         )
