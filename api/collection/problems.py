@@ -146,12 +146,13 @@ def make_result(correct: bool, message: str = "") -> None:
     sys.exit(0 if correct else 1)
 
 
-def grade() -> None:
+def grade(input_file: str, points: float) -> None:
+    # input_file: contents of the .in file
+    # points: points for this test case
+    # read_line() — read a line from the solution's stdout
+    # write_line(s) — send a line to the solution's stdin
+    # make_result(code, points, comment) — signal the verdict ("AC", "WA", etc.)
     pass  # TODO: implement judge logic
-
-
-if __name__ == "__main__":
-    grade()
 '''
         (problem_path / "validators" / "output" / "judge.py").write_text(
             judge_code, encoding="utf-8"

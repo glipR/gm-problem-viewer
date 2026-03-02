@@ -10,8 +10,9 @@ from pathlib import Path
 from api.collection.problems import get_problem
 from api.collection.solutions import get_candidate_solution, get_solutions
 from api.collection.test_sets import get_test_sets
-from api.execution.execute_cpp import CompileError, run_cpp_file
+from api.execution.execute_cpp import CompileError, compile_cpp, run_cpp_file
 from api.execution.execute_python import run_python_file
+from api.execution.run_interactive import run_interactive_testcase
 from api.execution.run_validators import run_output_validator_standard
 from api.jobs import update_job
 from api.models.problem import (
@@ -78,20 +79,31 @@ def run_solutions_job(
                                     result=results.model_dump(),
                                 )
                                 last_flush = now
-                        expectation = solution.expectation_for_set(test_set)
-                        non_AC = [x.verdict for x in set_verdicts if x.verdict != "AC"]
-                        set_verdict = non_AC[0] if non_AC else "AC"
-                        if expectation is not None and set_verdict not in expectation:
-                            results.solutions[-1].set_consistent[
-                                test_set.name
-                            ] = f"Expected verdict {expectation} for {test_set.name}, got {set_verdict}"
-                            failed_expectations = True
+                        if isinstance(solution.expectation, dict):
+                            expectation = solution.expectation_for_set(test_set)
+                            non_AC = [
+                                x.verdict for x in set_verdicts if x.verdict != "AC"
+                            ]
+                            set_verdict = non_AC[0] if non_AC else "AC"
+                            if (
+                                expectation is not None
+                                and set_verdict not in expectation
+                            ):
+                                results.solutions[-1].set_consistent[
+                                    test_set.name
+                                ] = f"Expected verdict {expectation} for {test_set.name}, got {set_verdict}"
+                                failed_expectations = True
                 non_AC = [
                     x.verdict
                     for x in results.solutions[-1].verdicts
                     if x.verdict != "AC"
                 ]
                 results.solutions[-1].overall = non_AC[0] if non_AC else "AC"
+                if (
+                    isinstance(solution.expectation, str)
+                    and solution.expectation != results.solutions[-1].overall
+                ):
+                    failed_expectations = True
                 now = time.monotonic()
                 if now - last_flush >= _FLUSH_INTERVAL:
                     update_job(
@@ -135,11 +147,85 @@ def output_individual_testcase(
         raise NotImplementedError(f"Unsupported language: {solution.language}")
 
 
+def _solution_cmd(problem_path: Path, solution: Solution) -> list[str]:
+    """Return the command to run a solution as a subprocess."""
+    full = solution.full_path(problem_path)
+    if solution.language == "python":
+        return ["python", str(full.resolve())]
+    elif solution.language == "cpp":
+        binary = compile_cpp(full)
+        return [str(binary)]
+    else:
+        raise NotImplementedError(f"Unsupported language: {solution.language}")
+
+
+def run_interactive_testcase_verdict(
+    problem_path: Path, problem: Problem, solution: Solution, test_case: TestCase
+) -> Verdict:
+    """Run an interactive testcase using the DMOJ-style grader."""
+    judge = problem.validators.output
+    if judge is None or judge.type != "judge":
+        return Verdict(
+            test_case=test_case.name,
+            test_set=test_case.set_name,
+            verdict="IE",
+            time_ms=0,
+            comment="No judge.py found for interactive problem",
+        )
+
+    judge_path = judge.full_path(problem_path)
+    in_path = test_case.full_path(problem_path)
+    input_data = in_path.read_text() if in_path.exists() else ""
+
+    points = 100
+
+    try:
+        cmd = _solution_cmd(problem_path, solution)
+    except CompileError as e:
+        return Verdict(
+            test_case=test_case.name,
+            test_set=test_case.set_name,
+            verdict="CE",
+            time_ms=0,
+            comment=e.stderr,
+        )
+
+    start = time.monotonic()
+    try:
+        result = run_interactive_testcase(
+            problem_path=problem_path,
+            judge_path=judge_path,
+            solution_cmd=cmd,
+            input_data=input_data,
+            points=points,
+            timeout_sec=problem.config.limits.time,
+        )
+    except Exception as e:
+        return Verdict(
+            test_case=test_case.name,
+            test_set=test_case.set_name,
+            verdict="IE",
+            time_ms=0,
+            comment=f"Judge error: {e}",
+        )
+    elapsed_ms = (time.monotonic() - start) * 1000
+
+    return Verdict(
+        test_case=test_case.name,
+        test_set=test_case.set_name,
+        verdict=result.verdict,
+        time_ms=elapsed_ms,
+        comment=result.comment,
+    )
+
+
 def run_individual_testcase(
     problem_path: Path, problem: Problem, solution: Solution, test_case: TestCase
 ):
     if problem.config.type == "interactive":
-        raise NotImplementedError
+        return run_interactive_testcase_verdict(
+            problem_path, problem, solution, test_case
+        )
     # Get solution output
     try:
         result = output_individual_testcase(problem_path, problem, solution, test_case)
