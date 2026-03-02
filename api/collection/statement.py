@@ -13,17 +13,13 @@ def get_statement(problem_path: Path) -> str | None:
     return statement_path.read_text(encoding="utf-8")
 
 
-def compile_statement(problem_path: Path) -> str | None:
+def compile_markdown(problem_path: Path, text: str) -> str:
     """
-    Compiles the markdown for a problem, using the few macros enabled.
+    Compile markdown text, expanding macros.
 
     Table for input/output segment:
     @include[setA/1.in][setA/1.out]
     """
-    text = get_statement(problem_path)
-    if text is None:
-        return text
-
     include_rule = re.compile(
         r"@include\[(.*)\]\[(.*)\]({(?P<kwargs>.*)})?", flags=re.MULTILINE
     )
@@ -36,6 +32,14 @@ def compile_statement(problem_path: Path) -> str | None:
             reconstructed, generate_input_output(problem_path, m[0], m[1], **kwargs)
         )
     return text
+
+
+def compile_statement(problem_path: Path) -> str | None:
+    """Compile the statement markdown, expanding @include macros."""
+    text = get_statement(problem_path)
+    if text is None:
+        return text
+    return compile_markdown(problem_path, text)
 
 
 def generate_input_output(problem_path: Path, input_file, output_file, title=None):

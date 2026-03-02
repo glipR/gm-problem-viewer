@@ -47,13 +47,15 @@ def export_dmoj(
     compiled_statement = compile_statement(problem_path)
     statement_path.write_text(compiled_statement, encoding="utf-8")
 
-    ## Solutions (move to top-level, and prefix the filenames based on folder structure)
+    ## Solutions (move to sol/ dir, and prefix the filenames based on folder structure)
     on_status("Copying solutions...")
     logger.info("Rendering solutions...")
+    sol_dir = export_problem_dir / "solutions"
+    sol_dir.mkdir(exist_ok=True)
     for sol in problem.solutions:
         content = sol.full_path(problem_path).read_text("utf-8")
         new_name = sol.path.replace("/", "_")
-        new_loc = export_problem_dir / new_name
+        new_loc = sol_dir / new_name
         new_loc.write_text(content, "utf-8")
 
     ## Input Validators (move to top-level, and prefix the filenames based on folder structure)
