@@ -16,6 +16,7 @@ import {
 import { IconPlayerPlay, IconAlertTriangle, IconBrandPython, IconBrandCpp, IconQuestionMark, IconCode, IconRefresh } from '@tabler/icons-react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
+import { showFailNotification } from '../../utils/failNotification'
 import type {
   JobStatus,
   Problem,
@@ -316,7 +317,7 @@ export default function SolutionsTab({ problem }: Props) {
       if (job.status === "done") {
         notifications.show({ message: 'Run complete', color: 'green' })
       } else {
-        notifications.show({ message: 'Failed to run solutions', color: 'red' })
+        showFailNotification('Failed to run solutions', job.id)
       }
       setActiveRun(null)
       qc.invalidateQueries({ queryKey: ['solution-merged-results', problem.slug] })
@@ -351,7 +352,7 @@ export default function SolutionsTab({ problem }: Props) {
       if (job.status === 'done') {
         notifications.show({ message: 'Output files regenerated', color: 'green' })
       } else {
-        notifications.show({ message: 'Failed to regenerate output', color: 'red' })
+        showFailNotification('Failed to regenerate output', job.id)
       }
       setRegenJobId(null)
       qc.invalidateQueries({ queryKey: ['test-sets', problem.slug] })

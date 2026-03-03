@@ -4,9 +4,12 @@ Jobs router — poll the status of async background jobs.
 
 from __future__ import annotations
 
+import subprocess
+
 from fastapi import APIRouter, HTTPException
 
-from api.jobs import read_job
+from api.config import get_settings
+from api.jobs import read_job, _job_path
 from api.models.problem import JobStatusResponse
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -34,3 +37,15 @@ def get_job(job_id: str):
         result=data.get("result"),
         error=data.get("error"),
     )
+
+
+@router.post("/{job_id:path}/open")
+def open_job_in_editor(job_id: str):
+    """Open the YAML cache file for a job in Cursor for debugging."""
+    path = _job_path(job_id)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Job file not found: {job_id}")
+
+    settings = get_settings()
+    subprocess.Popen(["cursor", str(settings.problems_root), str(path)])
+    return {"ok": True}

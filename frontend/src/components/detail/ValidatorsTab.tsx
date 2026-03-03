@@ -15,6 +15,7 @@ import {
 import { IconPlayerPlay, IconAlertTriangle } from '@tabler/icons-react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
+import { showFailNotification } from '../../utils/failNotification'
 import type { JobStatus, Problem, Validator, ValidatorResult } from '../../types/problem'
 import { runValidators, getLatestValidatorJob } from '../../api/problems'
 import { useJobPoller } from '../../hooks/useJobPoller'
@@ -191,7 +192,7 @@ export default function ValidatorsTab({ problem }: Props) {
       if (job.status === 'done') {
         notifications.show({ message: 'Validator run complete', color: 'green' })
       } else {
-        notifications.show({ message: 'Validator run failed', color: 'red' })
+        showFailNotification('Validator run failed', job.id)
       }
       setActiveJobId(null)
       qc.invalidateQueries({ queryKey: ['validator-latest', problem.slug] })

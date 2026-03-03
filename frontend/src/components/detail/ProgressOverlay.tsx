@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Box, Paper, Text, Group, Progress, Loader, Portal, Stack } from '@mantine/core'
 import { IconCircleCheck, IconCircleX, IconClock } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
+import { showFailNotification } from '../../utils/failNotification'
 import { useQueries, useQueryClient } from '@tanstack/react-query'
 import { getJob } from '../../api/problems'
 import type { JobStatus } from '../../types/problem'
@@ -163,10 +164,12 @@ export function ProgressOverlay({ steps, slug, onDone }: Props) {
       ),
     )
     qc.invalidateQueries({ queryKey: ['problem', slug] })
-    notifications.show({
-      message: anyFailed ? 'Pipeline run failed' : 'Pipeline complete',
-      color: anyFailed ? 'red' : 'green',
-    })
+    if (anyFailed) {
+      const failedJobId = results.find((r) => r.data?.status === 'failed')?.data?.id
+      showFailNotification('Pipeline run failed', failedJobId)
+    } else {
+      notifications.show({ message: 'Pipeline complete', color: 'green' })
+    }
     setTimeout(onDone, 2000)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allDone])

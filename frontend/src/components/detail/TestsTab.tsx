@@ -22,6 +22,7 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notifications } from '@mantine/notifications'
+import { showFailNotification } from '../../utils/failNotification'
 import {
   IconPlus,
   IconPlayerPlay,
@@ -530,10 +531,10 @@ export default function TestsTab({ problem }: Props) {
         qc.invalidateQueries({ queryKey: ['tests', problem.slug] })
         notifications.show({ message: 'Tests generated', color: 'green' })
       } else {
-        notifications.show({
-          message: `Generation failed${job.error ? `: ${job.error}` : ''}`,
-          color: 'red',
-        })
+        showFailNotification(
+          `Generation failed${job.error ? `: ${job.error}` : ''}`,
+          job.id,
+        )
       }
     },
     [qc, problem.slug],

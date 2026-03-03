@@ -238,3 +238,7 @@ export async function exportProblem(slug: string, target: string): Promise<{ job
   const { data } = await client.post<{ job_ids: string[] }>(`/problems/${slug}/export/`, { target })
   return data
 }
+
+export async function openJobInEditor(jobId: string): Promise<void> {
+  await client.post(`/jobs/${jobId}/open`)
+}
