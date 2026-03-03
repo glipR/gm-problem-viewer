@@ -5,10 +5,11 @@ A local-first tool for authoring, testing, and reviewing competitive programming
 GM Problem Viewer gives you a web UI on top of your problem directories — manage problem lifecycle on a Kanban board, render statements with custom markdown snippets, execute solutions, generate tests, run validators, and export to common online judge formats.
 
 
-|     |     |     |
-| --- | --- | --- |
-| ![](/images/kanban.png) | ![](/images/search.png) | ![](/images/statement.png) |
-| ![](/images/solutions.png) | ![](/images/tests.png) | ![](/images/editorial.png) |
+|     |     |
+| --- | --- |
+| ![](/images/kanban.png) | ![](/images/search.png) |
+| ![](/images/statement.png) | ![](/images/solutions.png) |
+| ![](/images/tests.png) | ![](/images/editorial.png) |
 
 ## Key Features
 
