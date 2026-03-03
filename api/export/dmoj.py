@@ -86,11 +86,11 @@ def _strip_frontmatter(source: str) -> str:
     """Remove the leading YAML frontmatter docstring."""
     match = re.match(r'^"""---\n.*?---\n(?:.*?)"""\n*', source, re.DOTALL)
     if match:
-        return source[match.end():]
+        return source[match.end() :]
     # Also handle bare triple-quote docstrings
     match = re.match(r'^""".*?"""\n*', source, re.DOTALL)
     if match:
-        return source[match.end():]
+        return source[match.end() :]
     return source
 
 
@@ -217,6 +217,7 @@ def export_dmoj(
             new_loc = export_problem_dir / new_name
             init_yml["custom_judge"] = new_name
         elif problem.config.type == "multi":
+            # TODO: Work for multi type problems (warden, card trick)
             init_yml["custom_judge"] = new_name
         new_loc.write_text(content, "utf-8")
 
