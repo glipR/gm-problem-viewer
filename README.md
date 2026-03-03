@@ -1,5 +1,12 @@
 # GM Problem Viewer
 
+> Disclaimer: This project uses a combination of hand-written code and vibe-coded portions. 
+> Since this is intended to be purely a development experience tool (speed up things you already know how to do), the developer figured this was a worthwhile
+> use of their time, so that they could spend more time actually writing problems than writing code for the program so they could write problems.
+> All code has been manually reviewed by the developer - this isn't completely blind.
+> 
+> If you have moral obligations with this and would not like to use the tool, that's completely understandable, which is why this disclaimer is front and centre.
+
 A local-first tool for authoring, testing, and reviewing competitive programming problems.
 
 GM Problem Viewer gives you a web UI on top of your problem directories — manage problem lifecycle on a Kanban board, render statements with custom markdown snippets, execute solutions, generate tests, run validators, and export to common online judge formats.
