@@ -155,16 +155,18 @@ For more tests, create another test set directory (e.g., `data/real/`) and eithe
 `data/real/gen.py`:
 
 ```python
-from pathlib import Path
 import random
+from testlibpy import test_case
 
-out_dir = Path(__file__).parent
+random.seed(42)
 
-for i in range(10):
-    n = random.randint(1, 10**9)
-    (out_dir / f"rand-{i+1}.in").write_text(f"{n}\n")
-    (out_dir / f"rand-{i+1}.yaml").write_text(f"description: Random case {i+1}\n")
+for _ in range(10):
+    with test_case(rpt_name="rand-", description="Random case") as w:
+        n = random.randint(1, 10**9)
+        w.write_line(n)
 ```
+
+The `test_case` context manager (from the bundled `testlibpy` library) handles file naming, writing `.in` files, and generating `.yaml` sidecar metadata automatically. Use `rpt_name` for repeated cases (auto-numbered) or `case_name` for a specific name. Any extra keyword arguments (like `description`) are written to the sidecar `.yaml`.
 
 Add a `data/real/config.yaml`:
 
