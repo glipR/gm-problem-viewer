@@ -12,6 +12,20 @@ cleanup() {
 }
 trap cleanup SIGINT SIGTERM
 
+# Load config.yaml values as defaults (env vars take priority)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONFIG_FILE="$SCRIPT_DIR/config.yaml"
+if [ -f "$CONFIG_FILE" ]; then
+    yaml_val() {
+        grep "^$1:" "$CONFIG_FILE" 2>/dev/null | sed 's/^[^:]*:\s*//' | sed 's/\s*#.*//' | xargs
+    }
+    : "${PORT:=$(yaml_val port)}"
+    : "${FRONTEND_PORT:=$(yaml_val frontend_port)}"
+    : "${PROBLEMS_ROOT:=$(yaml_val problems_root)}"
+    : "${CACHE_ROOT:=$(yaml_val cache_root)}"
+    export PORT FRONTEND_PORT PROBLEMS_ROOT CACHE_ROOT
+fi
+
 echo "=== GM Problem Viewer ==="
 echo
 
@@ -27,7 +41,7 @@ sleep 1
 echo "Starting frontend dev server..."
 echo
 echo "  Backend API:  http://localhost:${PORT:-8001}  (docs at /docs)"
-echo "  Frontend UI:  http://localhost:5173"
+echo "  Frontend UI:  http://localhost:${FRONTEND_PORT:-5173}"
 echo
 echo "Press Ctrl+C to stop both servers."
 echo

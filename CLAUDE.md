@@ -27,19 +27,23 @@ API docs available at `http://localhost:8001/docs` when running.
 ```bash
 # Must use Node v24 via nvm; run from fish shell
 fish -c "nvm use v24.13.0 && cd frontend && npm run dev"
+
+# Custom frontend port (default 5173)
+FRONTEND_PORT=3000 fish -c "nvm use v24.13.0 && cd frontend && npm run dev"
 ```
 
 Dev server proxies `/api/*` → `http://localhost:8001/*`.
 
 ## Configuration
 
-Settings are resolved from (in priority order): env vars → `config.yaml` at project root → defaults.
+Settings are resolved from (in priority order): env vars → `config.yaml` at project root → defaults. Both backend and frontend read from the same `config.yaml`; the frontend uses `frontend_port` and `port` (for proxy target) keys.
 
 | Setting | Env var | Default |
 |---|---|---|
 | Problems directory | `PROBLEMS_ROOT` | `examples/` |
 | Job cache directory | `CACHE_ROOT` | `.cache/` |
 | Server port | `PORT` | `8001` |
+| Frontend port | `FRONTEND_PORT` | `5173` |
 
 ## Architecture
 

@@ -7,3 +7,6 @@ cache_root: .cache
 
 # Port the backend API server listens on.
 port: 8001
+
+# Port the frontend server is available on.
+frontend_port: 5175
