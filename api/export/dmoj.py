@@ -231,17 +231,19 @@ def export_dmoj(
             content = test_case.full_path(problem_path).read_text("utf-8")
             new_name = test_case.name + ".in"
             test_path = Path("tests") / test_set.name / new_name
+            og_out_path = test_case.full_path(problem_path).with_suffix(".out")
+            out_path = test_path.with_suffix(".out")
             new_loc = export_problem_dir / test_path
             new_loc.parent.mkdir(parents=True, exist_ok=True)
             new_loc.write_text(content, "utf-8")
+            if og_out_path.exists():
+                new_loc.with_suffix(".out").write_text(
+                    og_out_path.read_text("utf-8"), "utf-8"
+                )
             batch.append(
                 {
                     "in": str(test_path),
-                    "out": (
-                        str(test_path.with_suffix(".out"))
-                        if export.generate_output_files
-                        else str(test_path)
-                    ),
+                    "out": (str(out_path) if out_path.exists() else str(test_path)),
                 }
             )
         init_yml["test_cases"].append(
@@ -250,22 +252,6 @@ def export_dmoj(
                 "points": test_set.config.points if test_set.config else 100,
             }
         )
-
-    ## Generate output files if needed
-    if export.generate_output_files:
-        on_status("Generating output files...")
-        logger.info("Generating output files...")
-        for test_set in test_sets:
-            for test_case in test_set.test_cases:
-                judge_sol = get_candidate_solution(problem_path)
-                judge_result = output_individual_testcase(
-                    problem_path, problem, judge_sol, test_case
-                )
-                new_name = test_case.name + ".out"
-                test_path = Path("tests") / test_set.name / new_name
-                new_loc = export_problem_dir / test_path
-                new_loc.parent.mkdir(parents=True, exist_ok=True)
-                new_loc.write_text(judge_result.stdout.strip(), "utf-8")
 
     ## TODO: Compile the test generator scripts to work locally. (For DMOJ - may need to change imports)
 

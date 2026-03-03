@@ -10,7 +10,6 @@ export interface ExportTarget {
   location: string
   clear_directory?: boolean
   overwrite_slug?: string
-  generate_output_files?: boolean
 }
 
 export interface ProblemConfig {

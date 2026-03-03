@@ -18,7 +18,6 @@ class ExportTarget(BaseModel):
     location: str
     clear_directory: bool = False
     overwrite_slug: str | None = None
-    generate_output_files: bool = True
     problemtools_config: dict[str, Any] = {}
     dmoj_config: dict[str, Any] = {}
 
