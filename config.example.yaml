@@ -1,0 +1,9 @@
+# Path to the directory containing your problem folders.
+# Each subdirectory should follow the problem format (see docs/problem-format.md).
+problems_root: examples
+
+# Directory for caching job results (solution runs, exports, reviews).
+cache_root: .cache
+
+# Port the backend API server listens on.
+port: 8001
