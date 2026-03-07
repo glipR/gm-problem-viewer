@@ -32,11 +32,14 @@ class ProblemConfig(BaseModel):
     type: str  # "standard" | "interactive" | "multi"
     tags: list[str] = []
     difficulty: int | None = None
+    quality: int | None = None  # 1-5 rating
     export_config: dict[str, ExportTarget] = {}
     state: str  # "draft" | "in-progress" | "review" | "complete" | "archive"
     contests: list[str] | None = None
     limits: ProblemLimits
     author: str
+    visibility: str = "private"  # "public" | "private"
+    external_judge_url: str | None = None
 
 
 class TestCase(BaseModel):

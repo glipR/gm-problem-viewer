@@ -207,6 +207,11 @@ export default function ProblemDetailPage() {
           {/* Badges row: difficulty, tags */}
           <Group justify="space-between" align="center">
             <Group gap={6} wrap="wrap">
+              {problem.config.quality != null && (
+                <Badge size="sm" variant="light" color="yellow">
+                  {'★'.repeat(problem.config.quality) + '☆'.repeat(5 - problem.config.quality)}
+                </Badge>
+              )}
               {problem.config.difficulty != null && (
                 <Badge size="sm" variant="filled" color="indigo">
                   {problem.config.difficulty}

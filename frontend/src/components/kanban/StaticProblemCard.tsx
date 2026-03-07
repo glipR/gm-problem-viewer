@@ -42,6 +42,11 @@ export default function StaticProblemCard({ problem, onSelect }: Props) {
             </Badge>
           ))}
           <div style={{flexGrow: 1 /* Spacer */}}></div>
+          {problem.config.quality != null && (
+            <Badge size="xs" variant="light" color="yellow" styles={staticOverflow}>
+              {'★'.repeat(problem.config.quality) + '☆'.repeat(5 - problem.config.quality)}
+            </Badge>
+          )}
           {problem.config.difficulty != null && (
             <Badge size="xs" variant="filled" color="indigo" styles={staticOverflow}>
               {problem.config.difficulty}

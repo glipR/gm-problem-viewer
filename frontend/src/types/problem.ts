@@ -17,6 +17,7 @@ export interface ProblemConfig {
   type: 'standard' | 'interactive' | 'multi'
   tags: string[]
   difficulty?: number
+  quality?: number
   contests?: string[]
   state: ProblemState
   limits: ProblemLimits

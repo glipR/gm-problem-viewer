@@ -67,6 +67,7 @@ type: standard | interactive              # required
 state: draft | in-progress | review       # optional; used by Kanban board
 author: <string>                          # optional
 difficulty: <integer>                     # optional; Codeforces-style rating (e.g. 800, 1200)
+quality: <integer>                       # optional; 1-5 star rating
 tags:                                     # optional list of topic tags
   - <tag>
 contests:                                 # optional list of contest slugs
@@ -74,6 +75,8 @@ contests:                                 # optional list of contest slugs
 limits:                                   # optional
   time: <seconds>                         # default: 1
   memory: <bytes>                         # default: 262144 (256 MB)
+visibility: public | private              # optional; default: private
+external_judge_url: <url>                 # optional; link to try the problem on an external judge
 export_config:                            # optional; keyed by export target name
   <target_name>:
     type: problemtools | dmoj | direct-copy
@@ -82,6 +85,14 @@ export_config:                            # optional; keyed by export target nam
     dmoj_config:                          # for type: dmoj
       include_archive: <bool>
 ```
+
+### `visibility`
+
+Controls whether a problem is included in the public static site (see [Static Site](static-site.md)). Problems default to `private` and must be explicitly set to `public` to appear on the generated site.
+
+### `external_judge_url`
+
+An optional URL linking to the problem on an external online judge (e.g. DMOJ, Codeforces). When set, the static site displays a "Try on Judge" button.
 
 ---
 

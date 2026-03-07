@@ -16,3 +16,6 @@ tags:
 type: standard
 contests:
 - special26
+visibility: public
+external_judge_url: https://google.com
+quality: 4

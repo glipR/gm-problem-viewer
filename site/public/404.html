@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+      // GitHub Pages SPA redirect: converts path to query param so index.html can restore it
+      var path = window.location.pathname
+      var repo = window.location.pathname.split('/')[1]
+      var rest = window.location.pathname.replace('/' + repo, '')
+      if (rest && rest !== '/') {
+        window.location.replace(
+          window.location.origin + '/' + repo + '/?p=' + encodeURIComponent(rest) + window.location.hash
+        )
+      }
+    </script>
+  </head>
+  <body></body>
+</html>

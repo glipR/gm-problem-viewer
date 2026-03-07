@@ -29,6 +29,7 @@ GM Problem Viewer gives you a web UI on top of your problem directories — mana
 - **AI-powered review** — Statement proofreading, validator coverage analysis, boundary test suggestions, solution optimality checks
 - **Export** — Export to DMOJ format (more targets planned)
 - **Search & filter** — Full-text search with tag, contest, and difficulty filtering
+- **Static site** — Generate a public-facing site for GitHub Pages with statement/editorial viewing (tags and difficulty hidden by default to avoid spoilers)
 
 ## Quick Start
 
@@ -67,6 +68,7 @@ Settings are resolved in priority order: **environment variables** > **`config.y
 - **[Getting Started](docs/getting-started.md)** — Installation, setup, and creating your first problem
 - **[Problem Format](docs/problem-format.md)** — Full schema reference for problem directories
 - **[Features](docs/features.md)** — Detailed documentation of all features
+- **[Static Site](docs/static-site.md)** — Generating a public-facing site for GitHub Pages
 
 ## Project Structure
 
@@ -87,6 +89,11 @@ frontend/src/
 ├── api/            # Axios API client
 ├── types/          # TypeScript types mirroring backend models
 └── store/          # Zustand state management
+
+site/               # Static site for public problem viewing
+├── build.py        # Python build script (generates JSON data from problems)
+├── src/            # Vite + React app (statement/editorial viewer)
+└── public/data/    # Generated at build time (git-ignored)
 ```
 
 ## Development
