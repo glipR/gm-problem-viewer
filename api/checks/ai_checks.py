@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 
 def run_claude(prompt: str, cwd: Path, timeout: int = 120) -> str:
     """Run the ``claude`` CLI with *prompt* and return its stdout."""
+    import os
+
+    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
     result = subprocess.run(
         [
             "claude", "-p", prompt,
@@ -31,6 +34,7 @@ def run_claude(prompt: str, cwd: Path, timeout: int = 120) -> str:
         capture_output=True,
         text=True,
         timeout=timeout,
+        env=env,
     )
     if result.returncode != 0:
         logger.warning("claude exited %d: %s", result.returncode, result.stderr[:500])
