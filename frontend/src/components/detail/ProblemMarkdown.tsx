@@ -1,6 +1,7 @@
 import { Box, ScrollArea } from '@mantine/core'
 import { Children, createContext, type ComponentProps, type ReactNode, useContext, useState } from 'react'
 import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
@@ -32,7 +33,7 @@ export default function ProblemMarkdown({ children, slug, extraComponents }: Pro
         }}
       >
         <Markdown
-          remarkPlugins={[remarkMath]}
+          remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[rehypeRaw, rehypeKatex]}
           components={{
             h1: ({ children }) => (
