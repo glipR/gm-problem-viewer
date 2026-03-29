@@ -206,6 +206,7 @@ export const editorialComponents: Components = {
             margin: '0 4px 4px 4px',
           }}
         >
+          <br style={{display: "none"}}/>
           {rest}
         </div>
       </details>
