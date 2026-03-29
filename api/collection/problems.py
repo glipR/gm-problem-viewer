@@ -138,12 +138,12 @@ def write_line(s: str) -> None:
     print(s, flush=True)
 
 
-def make_result(correct: bool, message: str = "") -> None:
-    if correct:
+def make_result(code: str, points: float, message: str = "") -> None:
+    if code == "AC":
         print(f"AC {message}", file=sys.stderr)
     else:
         print(f"WA {message}", file=sys.stderr)
-    sys.exit(0 if correct else 1)
+    sys.exit(0 if code == "AC" else 1)
 
 
 def grade(input_file: str, points: float) -> None:

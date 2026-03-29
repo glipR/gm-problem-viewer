@@ -201,12 +201,14 @@ def run_interactive_testcase_verdict(
             timeout_sec=problem.config.limits.time,
         )
     except Exception as e:
+        import traceback
+
         return Verdict(
             test_case=test_case.name,
             test_set=test_case.set_name,
             verdict="IE",
             time_ms=0,
-            comment=f"Judge error: {e}",
+            comment=f"Judge error: {e} {traceback.format_exc()}",
         )
     elapsed_ms = (time.monotonic() - start) * 1000
 
